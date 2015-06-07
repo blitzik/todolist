@@ -1,0 +1,6 @@
+services:
+
+	# Factories
+	- TodoList\Factories\AuthenticationFormFactory
+
+	router: TodoList\RouterFactory::createRouter

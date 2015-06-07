@@ -1,0 +1,44 @@
+{block content}
+<div class="row">
+    <div class="col-md-4 center-block">
+        <h1><a href="{link Sign:default}">Todo-list</a></h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 center-block">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 n:block=title class="panel-title">Sign in</h2>
+            </div>
+
+            <div class="panel-body">
+            {form signForm}
+                <div class="form-group has-feedback">
+                    {label email /}
+                    {input email}
+                </div>
+
+                <div class="form-group">
+                    {label password}Password (<a href="{link PasswordReset:default}">Forgot password</a>){/label}
+                    {input password}
+                </div>
+
+                <div class="checkbox">
+                    {label keepLoggedIn}
+                        {input keepLoggedIn}
+                    {/label}
+                </div>
+
+                {input submit}
+            {/form}
+            </div>
+
+            <div class="panel-footer">
+                <a href="{link Account:registration}">I do not have an Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{/block}

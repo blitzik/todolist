@@ -1,0 +1,34 @@
+{block scripts}
+{include parent}
+<script src="{$basePath}/js/placeholders.js"></script>
+{/block}
+
+{block content}
+<div class="row">
+    <div class="col-md-4 center-block">
+        <h1><a href="{link Sign:default}">Todo-list</a></h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 center-block">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 n:block=title class="panel-title">Password Reset</h2>
+            </div>
+
+            <div class="panel-body">
+            {form passwordResetForm}
+                <div class="form-group">
+                    {label email /}
+                    {input email}
+                </div>
+
+                {input submit}
+            {/form}
+            </div>
+        </div>
+    </div>
+</div>
+
+{/block}

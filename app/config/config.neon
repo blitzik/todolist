@@ -1,0 +1,31 @@
+# WARNING: it is CRITICAL that this file & directory are NOT accessible directly via a web browser!
+# http://nette.org/security-warning
+
+php:
+	date.timezone: Europe/Prague
+
+
+application:
+	errorPresenter: Error
+	mapping:
+		*: TodoList\*Module\Presenters\*Presenter
+
+
+session:
+	expiration: 1 month
+	savePath: %appDir%/../temp/sessions
+	name: 'todolist'
+
+extensions:
+	console: Kdyby\Console\DI\ConsoleExtension
+	events: Kdyby\Events\DI\EventsExtension
+	annotations: Kdyby\Annotations\DI\AnnotationsExtension
+	doctrine: Kdyby\Doctrine\DI\OrmExtension
+
+doctrine:
+	metadata:
+		TodoList\Entities: %appDir%/model/Entities
+
+includes:
+	- parameters.neon
+	- services.neon

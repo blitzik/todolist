@@ -1,0 +1,51 @@
+
+{snippet list}
+<div id="projects">
+{block listOfProjects}
+<ul>
+    {foreach $projects as $project}
+    {var $id = $project['id']}
+    <li>
+        <div class="p-item" data-project-id="{$id}">
+            <a href="{plink Project:tasks 'id' => $id}">{$project['name']}</a>
+    {if $project['numberOfTasks'] > 0}
+            <span class="badge">{$project['numberOfTasks']}</span>
+    {/if}
+    <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle btn-xs"><span class="caret"></span></button>
+        <ul class="dropdown-menu">
+            <li n:if="$project['level'] < 3"><a href="{link projectForm-$id:showForm!}" class="ajax add-project">Add Project</a></li>
+            <li><a href="">Rename</a></li>
+            <li n:tag-if="!$iterator->isFirst() or !$iterator->isLast()" class="divider"></li>
+
+            {if !$iterator->isFirst()}
+            <li><a href="{link moveUp! 'projectID' => $id}" class="ajax">Move up</a></li>
+            {/if}
+
+            {if !$iterator->isLast()}
+            <li><a href="{link moveDown! 'projectID' => $id}" class="ajax">Move down</a></li>
+            {/if}
+
+            <li n:tag-if="!$iterator->isLast() or $project['level'] > 0" class="divider"></li>
+            <li><a href="{plink Project:remove, 'id' => $id}">Remove</a></li>
+
+        </ul>
+    </div>
+    {control projectForm-$id}
+
+        {if !empty($project['__children'])}
+            {include listOfProjects, projects => $project['__children']}
+        {/if}
+    </li>
+    {/foreach }
+</ul>
+{/block}
+</div>
+
+<script>
+$(function () {
+    $('.add-project').on('click', function () {
+        $('#projects button[data-toggle="dropdown"]').parent().removeClass('open');
+    });
+});
+</script>
+{/snippet}

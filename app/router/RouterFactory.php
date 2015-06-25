@@ -6,7 +6,6 @@ use	Nette\Application\Routers\RouteList;
 use	Nette\Application\Routers\Route;
 use Nette;
 
-
 class RouterFactory
 {
 
@@ -16,7 +15,11 @@ class RouterFactory
 	public static function createRouter()
 	{
 		$router = new RouteList();
-		$router[] = new Route('<presenter>/<action>[/<id>]', 'Homepage:default');
+		$router[] = new Route('<presenter>/<action>[/<id>]', [
+            'presenter' => 'Homepage',
+            'action' => 'default',
+            'id' => null
+        ]);
 		return $router;
 	}
 

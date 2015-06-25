@@ -1,6 +1,30 @@
 services:
 
+	security.userStorage: TodoList\Authentication\UserStorage
+
+	# Components
+	projectList:
+		implement: TodoList\Components\IProjectListControlFactory
+
+	newProjectForm:
+		implement: TodoList\Components\IProjectFormControlFactory
+
+	# Facades
+	- TodoList\Facades\UsersFacade
+
+	# Authenticator
+	- TodoList\Authenticators\Authenticator
+
 	# Factories
 	- TodoList\Factories\AuthenticationFormFactory
+	- TodoList\Factories\RemoveFormFactory
+
+	# Transaction
+	- TodoList\Transaction
+
+	# Listeners
+	authenticationListener:
+		class: TodoList\Subscribers\AuthenticationListener
+		tags: [kdyby.subscriber]
 
 	router: TodoList\RouterFactory::createRouter

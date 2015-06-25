@@ -2,9 +2,14 @@
 
 namespace TodoList\Presenters;
 
+use TodoList\RuntimeExceptions\UsernameDuplicityException;
+use TodoList\RuntimeExceptions\EmailDuplicityException;
 use TodoList\Factories\AuthenticationFormFactory;
 use Nette\Application\UI\Presenter;
+use Kdyby\Doctrine\EntityManager;
+use TodoList\Facades\UsersFacade;
 use Nette\Application\UI\Form;
+use TodoList\Entities\User;
 
 class AccountPresenter extends Presenter
 {
@@ -13,6 +18,24 @@ class AccountPresenter extends Presenter
      * @inject
      */
     public $authenticationFormFactory;
+
+    /**
+     * @var UsersFacade
+     * @inject
+     */
+    public $usersFacade;
+
+    /**
+     * @var \Nette\Http\Request
+     * @inject
+     */
+    public $request;
+
+    /**
+     * @var EntityManager
+     * @inject
+     */
+    public $em;
 
     protected function createComponentRegistrationForm()
     {
@@ -27,8 +50,9 @@ class AccountPresenter extends Presenter
             'Your password must have at least %d characters', 5
         );
 
-        $form->addText('passConfirm', 'Confirm your Password')
+        $form->addPassword('passConfirm', 'Confirm your Password')
                 ->setRequired('Confirm your password, please.')
+                ->setOmitted()
                 ->setAttribute('class', 'form-control')
                 ->addRule(
                     Form::EQUAL,
@@ -38,6 +62,31 @@ class AccountPresenter extends Presenter
 
         $form['submit']->caption = 'Create an Account';
 
+        $form->onSuccess[] = [$this, 'processRegistration'];
+
         return $form;
+    }
+
+    public function processRegistration(Form $form, $values)
+    {
+        $user = new User(
+            $values['username'],
+            $values['password'],
+            $values['email'],
+            $this->request->getRemoteAddress()
+        );
+
+        try {
+            $this->usersFacade->registerNewUser($user);
+            $this->flashMessage('Your Account has been successfully created.', 'bg-success');
+            $this->redirect('Sign:default');
+
+        } catch (UsernameDuplicityException $ude) {
+            $form->addError('Username is already taken.');
+
+        } catch (EmailDuplicityException $ede) {
+            $form->addError('E-mail is already taken.');
+        }
+
     }
 }

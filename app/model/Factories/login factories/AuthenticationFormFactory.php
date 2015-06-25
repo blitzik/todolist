@@ -19,7 +19,7 @@ class AuthenticationFormFactory extends Object
                 ->setAttribute('class', 'form-control')
                 ->addRule(Form::EMAIL, 'Enter valid E-mail address, please.');
 
-        $form->addText('password', 'Password')
+        $form->addPassword('password', 'Password')
                 ->setRequired('Type your password.')
                 ->setAttribute('class', 'form-control');
 

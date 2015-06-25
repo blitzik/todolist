@@ -6,6 +6,7 @@ use Exceptions\Logic\InvalidArgumentException;
 use Kdyby\Doctrine\Entities\BaseEntity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\Index;
+use Nette\Security\IIdentity;
 use Nette\Security\Passwords;
 use Nette\Utils\Validators;
 use Nette\Utils\Random;
@@ -14,7 +15,7 @@ use Nette\Utils\Random;
  * @ORM\Entity
  * @ORM\Table(name="user")
  */
-class User extends BaseEntity
+class User extends BaseEntity implements IIdentity
 {
     /**
      * @ORM\Id
@@ -110,7 +111,10 @@ class User extends BaseEntity
         Validators::assert($email, 'string:1..70');
         $this->email = $email;
 
-        Validators::assert($role, 'null|string:1..20');
+        if ($role === null) {
+            $role = 'member';
+        }
+        Validators::assert($role, 'string:1..20');
         $this->role = $role;
     }
 
@@ -145,6 +149,11 @@ class User extends BaseEntity
     public function getTokenValidity()
     {
         return $this->token_validity;
+    }
+
+    public function getRoles()
+    {
+        return [$this->role];
     }
 
 }

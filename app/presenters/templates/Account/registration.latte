@@ -1,19 +1,18 @@
+{layout '../accountsActionsLayout.latte'}
+
 {block content}
 <div class="row">
     <div class="col-md-4 center-block">
-        <h1><a href="{link Sign:default}">Todo-list</a></h1>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-4 center-block">
+    {form registrationForm}
+    <p class="bg-danger error" n:if="$form->hasErrors()" n:foreach="$form->errors as $error">
+        {$error}
+    </p>
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h2 n:block=title class="panel-title">New personal Account registration</h2>
             </div>
 
             <div class="panel-body">
-            {form registrationForm}
                 <div class="form-group">
                     {label username /}
                     {input username}
@@ -35,9 +34,9 @@
                 </div>
 
                 {input submit}
-            {/form}
             </div>
         </div>
+    {/form}
     </div>
 </div>
 

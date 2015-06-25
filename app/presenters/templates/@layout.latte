@@ -5,7 +5,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<title>{ifset title}{include title|striptags} | {/ifset}Nette Sandbox</title>
+	<title>{ifset title}{include title|striptags}{/ifset}</title>
 
 	<link href="{$basePath}/css/bootstrap.min.css" rel="stylesheet">
 	<link href="{$basePath}/css/dashboard.css" rel="stylesheet">
@@ -13,19 +13,34 @@
         <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    {block scripts}
+    	<script src="{$basePath}/js/jquery-1.11.2.min.js"></script>
+    	<script src="{$basePath}/js/netteForms.min.js"></script>
+    	<script src="{$basePath}/js/nette.ajax.js"></script>
+    	<script src="{$basePath}/js/main.js"></script>
+    	<script src="{$basePath}/js/bootstrap.min.js"></script>
+    {/block}
 </head>
 
 <body>
-	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
     <div class="container">
-	    {include content}
+    <div class="row">
+        <div class="col-xs-6 col-sm-4 col-md-3 left-side">
+        <h1><a href="{link Homepage:default}" class="head-title">Todo-list</a></h1>
+        <a href="{link projectForm:showForm!}" class="ajax">+ add Project</a>
+        {control projectForm}
+
+        {snippet projectList}
+            {control projectList}
+        {/snippet}
+        </div>
+
+        <div class="col-xs-6 col-sm-8 col-md-9 content">
+            <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+            {include content}
+        </div>
+	</div>
 	</div>
 
-	{block scripts}
-	<script src="{$basePath}/js/jquery-1.11.2.min.js"></script>
-	<script src="{$basePath}/js/netteForms.min.js"></script>
-	<script src="{$basePath}/js/main.js"></script>
-	<script src="{$basePath}/js/bootstrap.min.js"></script>
-	{/block}
 </body>
 </html>

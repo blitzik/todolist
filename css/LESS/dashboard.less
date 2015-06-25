@@ -1,14 +1,185 @@
+.border-radius(@radius: 5px){
+  -moz-border-radius: @radius;
+  -webkit-border-radius: @radius;
+  border-radius: @radius; /* future proofing */
+  -khtml-border-radius: @radius; /* for old Konqueror browsers */
+}
+
 /*#404040*/
 
 body{
   background-color: #6DBDD6;
 }
 
+.container{
+  background-color: #ffffff;
+}
+
+.left-side{
+  word-break: break-all;
+}
+
+.content{
+  padding-top: 25px;
+}
+
 h1{
+  margin-bottom: 25px;
   a{
     color: #fff;
     &:hover{ color: #fff;}
   }
 }
 
+.head-title{
+  color: #333;
+  &:hover{
+    color: #333;
+    text-decoration: underline;
+  }
+}
+
 .center-block {float: none !important}
+
+.flash,
+.flash-users,
+.error{
+  padding: 8px;
+  margin: 15px 0;
+}
+
+.flash-users{
+  margin-top: 10px;
+}
+
+.panel-heading{
+  h2{
+    margin: 0;
+  }
+}
+
+/* ————————————————————–
+  Tree core styles
+*/
+
+.tree,
+.tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree{
+  margin-bottom: 50px;
+
+  a{
+    text-decoration: underline;
+    &:hover{ text-decoration: none}
+  }
+
+  .node {
+    margin: 0;
+    padding: 0 1.5em; /* indentation + .5em */
+    line-height: 2em; /* default list item's `line-height` */
+    color: #369;
+    font-weight: bold;
+    position: relative;
+  }
+
+  .parent {
+    margin-left: 1em; /* indentation */
+    position: relative;
+
+    &:before {
+      content: "";
+      display: block;
+      width: 0;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      border-left: 1px solid;
+    }
+
+    li{
+      &:before {
+        content: "";
+        display: block;
+        width: 10px; /* same with indentation */
+        height: 0;
+        border-top: 1px solid;
+        margin-top: -1px; /* border top width */
+        position: absolute;
+        top: 1em; /* (line-height/2) */
+        left: 0;
+      }
+
+      &:last-child{
+        &:before{
+          background: #fff; /* same with body background */
+          height: auto;
+          top: 1em; /* (line-height/2) */
+          bottom: 0;
+        }
+      }
+    }
+
+    ul {margin-left: .5em} /* (indentation/2) */
+  }
+}
+
+#new-project-form{
+  margin-bottom: 20px;
+  //border-top: 1px solid #ccc;
+  padding-top: 20px;
+}
+
+#projects{
+  border: 0px solid black;
+  border-top: 1px solid #ccc;
+  padding: 20px 0;
+
+  ul{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+
+    li{
+      margin-bottom: 3px;
+
+      .p-item{
+        position: relative;
+        padding: 10px 8px;
+        border: 1px solid #ccc;
+        background-color: #fafafa;
+        .border-radius(10px);
+
+        button{
+          position: absolute;
+          right: 15px;
+        }
+
+        .dropdown-menu{
+          position: absolute;
+          right: 0;
+          left: auto;
+        }
+
+        .badge{
+          margin-left: 5px;
+        }
+      }
+
+      ul{
+        padding-left: 20px;
+
+        li{
+          margin-top: 3px;
+        }
+
+      }
+    }
+  }
+}
+

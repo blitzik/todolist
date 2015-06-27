@@ -7,9 +7,11 @@ use TodoList\Repositories\ProjectRepository;
 use Nette\Forms\Controls\SubmitButton;
 use Kdyby\Doctrine\EntityManager;
 use Nette\Application\UI\Control;
+use Doctrine\ORM\AbstractQuery;
 use Nette\Application\UI\Form;
 use TodoList\Entities\Project;
 use Nette\Security\User;
+use Tracy\Debugger;
 
 class ProjectFormControl extends Control
 {
@@ -17,6 +19,8 @@ class ProjectFormControl extends Control
 
     // Events
     public $onCancelClick;
+    public $onNewProject;
+    public $onEditProject;
 
     // --------------------------
 
@@ -44,6 +48,11 @@ class ProjectFormControl extends Control
      * @var int
      */
     private $parentProjectID;
+
+    /**
+     * @var string
+     */
+    private $projectName;
 
     public function __construct(
         EntityManager $entityManager,
@@ -81,15 +90,15 @@ class ProjectFormControl extends Control
         $this->visible = false;
     }
 
-    protected function createComponentNewProjectForm()
+    protected function createComponentForm()
     {
         $form = new Form();
 
-        $form->addText('name', 'Project name', null, 30)
+        $form->addText('name', 'New Project name:', null, 30)
                 ->setRequired('Please enter Project name.')
                 ->setAttribute('class', 'input-project-name');
 
-        $form->addSubmit('save', 'Save')
+        $form->addSubmit('save', 'Create new project')
                 ->setAttribute('class', 'ajax btn btn-primary btn-sm')
                 ->onClick[] = [$this, 'processSaveProject'];
 
@@ -99,6 +108,7 @@ class ProjectFormControl extends Control
                 ->onClick[] = [$this, 'processCancel'];
 
         $form->addHidden('parent', $this->parentProjectID);
+        $form->addHidden('editForm', false);
 
         $form->getElementPrototype()->id = 'new-project-form';
 
@@ -113,7 +123,8 @@ class ProjectFormControl extends Control
         if (empty($values['parent'])) {
             $parent = $this->projectRepository
                            ->findOneBy(['owner' => $this->user->getIdentity(),
-                                        'lft' => 1]);
+                                        'lft' => 1]
+                           );
         } else {
             $parent = $this->projectRepository
                            ->findOneBy(['id' => $values['parent'],
@@ -131,22 +142,23 @@ class ProjectFormControl extends Control
             }
         }
 
-        $project = new Project(
-            $values['name'],
-            $this->user->getIdentity(),
-            $parent
-        );
+        if ($values['editForm'] == false) {
+            $project = new Project(
+                $values['name'],
+                $this->user->getIdentity(),
+                $parent
+            );
 
-        $this->projectRepository->persistAsLastChildOf($project, $parent);
-        $this->entityManager->flush();
+            $this->projectRepository->persistAsLastChildOf($project, $parent);
+            $this->entityManager->flush();
 
-        if ($this->presenter->isAjax()) {
-            $this->visible = false;
-            $this->redrawControl('projectForm');
-            $this->presenter->redrawControl('projectList');
+            $this->onNewProject($this, $project->getId());
+
         } else {
-            $this->presenter->flashMessage('New Project has been successfully created.', 'bg-success');
-            $this->presenter->redirect('Project:tasks', ['id' => $project->getId()]);
+            $parent->setName($values['name']);
+            $this->entityManager->persist($parent)->flush();
+
+            $this->onEditProject($this, $parent->getId());
         }
     }
 
@@ -158,13 +170,30 @@ class ProjectFormControl extends Control
     /**
      * @secured
      */
-    public function handleShowForm()
+    public function handleShowForm($edit = false)
     {
-        $this->setAsVisible();
         if ($this->presenter->isAjax()) {
+            $this->setAsVisible();
+
+            $this->projectName = $this->entityManager
+                                      ->createQuery(
+                                          'SELECT p.name as name FROM ' .Project::class.' p
+                                           WHERE p.id = :id AND p.owner = :owner'
+                                      )->setParameters(['id' => $this->parentProjectID,
+                                                        'owner' => $this->user->getIdentity()])
+                                      ->getResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
+
+            if ($edit == true) {
+                $this['form']['name']->setDefaultValue($this->projectName);
+                $this['form']['editForm']->value = true;
+                $this['form']['save']->caption = 'Rename project';
+            } else {
+                $this['form']['name']->caption = 'New [' . $this->projectName . '\'s] sub project name:';
+            }
             $this->redrawControl('projectForm');
         } else {
-            $this->presenter->redirect('Project:add', ['id' => $this->parentProjectID]);
+            $link = $edit == true ? 'Project:rename' : 'Project:add';
+            $this->presenter->redirect($link, ['id' => $this->parentProjectID]);
         }
     }
 
@@ -174,6 +203,7 @@ class ProjectFormControl extends Control
         $template->setFile(__DIR__ . '/template.latte');
 
         $template->visible = $this->visible;
+        $template->projectName = $this->projectName;
 
         $template->render();
     }

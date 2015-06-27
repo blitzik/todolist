@@ -2,6 +2,7 @@
 
 namespace TodoList\Presenters;
 
+use Doctrine\ORM\AbstractQuery;
 use TodoList\Components\IProjectFormControlFactory;
 use TodoList\Repositories\ProjectRepository;
 use TodoList\Components\ProjectFormControl;
@@ -42,12 +43,12 @@ class ProjectPresenter extends SecurityPresenter
     }
 
 
-    public function actionTasks()
+    public function actionTasks($id)
     {
 
     }
 
-    public function renderTasks()
+    public function renderTasks($id)
     {
 
     }
@@ -62,6 +63,25 @@ class ProjectPresenter extends SecurityPresenter
 
     }
 
+    public function actionRename($id)
+    {
+        $projectName = $this->em
+                            ->createQuery('SELECT p.name as name FROM ' .Project::class.' p
+                                           WHERE p.id = :id AND p.owner = :owner')
+                            ->setParameters(['id' => $id,
+                                             'owner' => $this->user->getIdentity()])
+                            ->getResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
+
+        $this['newProjectForm']['form']['name']->setDefaultValue($projectName);
+        $this['newProjectForm']['form']['editForm']->value = true;
+        $this['newProjectForm']['form']['save']->caption = 'Rename project';
+    }
+
+    public function renderRename($id)
+    {
+
+    }
+
     protected function createComponentNewProjectForm()
     {
         $comp = $this->projectFormControlFactory->create();
@@ -69,6 +89,8 @@ class ProjectPresenter extends SecurityPresenter
         $comp->setAsVisible();
 
         $comp->onCancelClick[] = [$this, 'processProjectFormCancelClick'];
+        $comp->onNewProject[] = [$this, 'onNewProject'];
+        $comp->onEditProject[] = [$this, 'onEditProject'];
 
         return $comp;
     }
@@ -76,6 +98,18 @@ class ProjectPresenter extends SecurityPresenter
     public function processProjectFormCancelClick(ProjectFormControl $projectFormControl)
     {
         $this->redirect('Project:tasks', ['id' => $projectFormControl->getParentProjectID()]);
+    }
+
+    public function onNewProject(ProjectFormControl $projectFormControl, $id)
+    {
+        $this->presenter->flashMessage('New Project has been successfully created.', 'bg-success');
+        $this->redirect('Project:tasks', ['id' => $id]);
+    }
+
+    public function onEditProject(ProjectFormControl $projectFormControl, $id)
+    {
+        $this->flashMessage('Project has been successfully renamed.', 'bg-success');
+        $this->redirect('Project:tasks', ['id' => $id]);
     }
 
     public function actionRemove($id)

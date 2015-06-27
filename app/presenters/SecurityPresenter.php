@@ -5,12 +5,11 @@ namespace TodoList\Presenters;
 use Nextras\Application\UI\SecuredLinksPresenterTrait;
 use TodoList\Components\IProjectFormControlFactory;
 use TodoList\Components\IProjectListControlFactory;
+use TodoList\Components\ProjectListControl;
 use TodoList\Components\ProjectFormControl;
 use Nette\Application\UI\Presenter;
 use Kdyby\Doctrine\EntityManager;
 use Nette\Http\UserStorage;
-use TodoList\Components\ProjectListControl;
-use Tracy\Debugger;
 
 class SecurityPresenter extends Presenter
 {
@@ -61,13 +60,15 @@ class SecurityPresenter extends Presenter
     {
         $comp = $this->projectListFactory->create();
 
-        $comp->onProjectFormCancelClick[] = [$this, 'processProjectFormCancelClickInProjectList'];
-        $comp->onFinishedProjectMovement[] = [$this, 'doAfterProjectMovement'];
+        $comp->onProjectFormCancelClick[] = [$this, 'processProjectRootCancelClick'];
+        $comp->onFinishedProjectMovement[] = [$this, 'onProjectMovement'];
+        $comp->onNewProject[] = [$this, 'onNewProject'];
+        $comp->onEditProject[] = [$this, 'onEditProject'];
 
         return $comp;
     }
 
-    public function doAfterProjectMovement(ProjectListControl $projectListControl)
+    public function onProjectMovement(ProjectListControl $projectListControl)
     {
         if ($this->isAjax()) {
             $projectListControl->redrawControl('list');
@@ -76,16 +77,41 @@ class SecurityPresenter extends Presenter
         }
     }
 
-    protected function createComponentProjectForm()
+    public function onEditProject(ProjectFormControl $projectFormControl, $id)
+    {
+        if ($this->isAjax()) {
+            $projectFormControl->hideForm();
+            $projectFormControl->redrawControl('projectForm');
+            $this->redrawControl('projectList');
+        } else {
+
+            $this->redirect('this');
+        }
+    }
+
+    protected function createComponentProjectForm() // new Root project (not sub project)
     {
         $comp = $this->newProjectFormFactory->create();
 
-        $comp->onCancelClick[] = [$this, 'processProjectFormCancelClickInProjectList'];
+        $comp->onCancelClick[] = [$this, 'processProjectRootCancelClick'];
+        $comp->onNewProject[] = [$this, 'onNewProject'];
 
         return $comp;
     }
 
-    public function processProjectFormCancelClickInProjectList(ProjectFormControl $projectFormControl)
+    public function onNewProject(ProjectFormControl $projectFormControl, $id)
+    {
+        if ($this->isAjax()) {
+            $projectFormControl->hideForm();
+            $projectFormControl->redrawControl('projectForm');
+            $this->redrawControl('projectList');
+        } else {
+
+            $this->redirect('this');
+        }
+    }
+
+    public function processProjectRootCancelClick(ProjectFormControl $projectFormControl)
     {
         if ($this->isAjax()) {
             $projectFormControl->hideForm();

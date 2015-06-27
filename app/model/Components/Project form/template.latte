@@ -2,7 +2,7 @@
 {snippet projectForm}
 <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 {if $visible === true}
-    {form newProjectForm}
+    {form form}
         <div class="form-group">
             {label name /}
             {input name class => 'form-control'}

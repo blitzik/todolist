@@ -2,19 +2,20 @@
 {snippet list}
 <div id="projects">
 {block listOfProjects}
+{if count($projects) > 0}
 <ul>
     {foreach $projects as $project}
     {var $id = $project['id']}
-    <li>
+    <li n:class="$project['level'] == 1 ? root">
         <div class="p-item" data-project-id="{$id}">
-            <a href="{plink Project:tasks 'id' => $id}">{$project['name']}</a>
+            <a href="{plink Project:tasks 'id' => $id}">{$project['name']}
     {if $project['numberOfTasks'] > 0}
-            <span class="badge">{$project['numberOfTasks']}</span>
-    {/if}
+            <span class="badge" title="unfinished tasks">{$project['numberOfTasks']}</span>
+    {/if}</a>
     <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle btn-xs"><span class="caret"></span></button>
         <ul class="dropdown-menu">
-            <li n:if="$project['level'] < 3"><a href="{link projectForm-$id:showForm!}" class="ajax add-project">Add Project</a></li>
-            <li><a href="">Rename</a></li>
+            <li n:if="$project['level'] < 3"><a href="{link projectForm-$id:showForm!}" class="ajax project-act">Add Project</a></li>
+            <li><a href="{link projectForm-$id:showForm!, 'edit' => true}" class="ajax project-act">Rename</a></li>
             <li n:tag-if="!$iterator->isFirst() or !$iterator->isLast()" class="divider"></li>
 
             {if !$iterator->isFirst()}
@@ -38,12 +39,15 @@
     </li>
     {/foreach }
 </ul>
+{else}
+<p>No active Projects yet.</p>
+{/if}
 {/block}
 </div>
 
 <script>
 $(function () {
-    $('.add-project').on('click', function () {
+    $('.project-act').on('click', function () {
         $('#projects button[data-toggle="dropdown"]').parent().removeClass('open');
     });
 });

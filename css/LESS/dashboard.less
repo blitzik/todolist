@@ -62,71 +62,71 @@ h1{
   Tree core styles
 */
 
-.tree,
-.tree ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.tree{
-  margin-bottom: 50px;
-
-  a{
-    text-decoration: underline;
-    &:hover{ text-decoration: none}
-  }
-
-  .node {
-    margin: 0;
-    padding: 0 1.5em; /* indentation + .5em */
-    line-height: 2em; /* default list item's `line-height` */
-    color: #369;
-    font-weight: bold;
-    position: relative;
-  }
-
-  .parent {
-    margin-left: 1em; /* indentation */
-    position: relative;
-
-    &:before {
-      content: "";
-      display: block;
-      width: 0;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      border-left: 1px solid;
-    }
-
-    li{
-      &:before {
-        content: "";
-        display: block;
-        width: 10px; /* same with indentation */
-        height: 0;
-        border-top: 1px solid;
-        margin-top: -1px; /* border top width */
-        position: absolute;
-        top: 1em; /* (line-height/2) */
-        left: 0;
-      }
-
-      &:last-child{
-        &:before{
-          background: #fff; /* same with body background */
-          height: auto;
-          top: 1em; /* (line-height/2) */
-          bottom: 0;
-        }
-      }
-    }
-
-    ul {margin-left: .5em} /* (indentation/2) */
-  }
-}
+//.tree,
+//.tree ul {
+//  margin: 0;
+//  padding: 0;
+//  list-style: none;
+//}
+//
+//.tree{
+//  margin-bottom: 50px;
+//
+//  a{
+//    text-decoration: underline;
+//    &:hover{ text-decoration: none}
+//  }
+//
+//  .node {
+//    margin: 0;
+//    padding: 0 1.5em; /* indentation + .5em */
+//    line-height: 2em; /* default list item's `line-height` */
+//    color: #369;
+//    font-weight: bold;
+//    position: relative;
+//  }
+//
+//  .parent {
+//    margin-left: 1em; /* indentation */
+//    position: relative;
+//
+//    &:before {
+//      content: "";
+//      display: block;
+//      width: 0;
+//      position: absolute;
+//      top: 0;
+//      bottom: 0;
+//      left: 0;
+//      border-left: 1px solid;
+//    }
+//
+//    li{
+//      &:before {
+//        content: "";
+//        display: block;
+//        width: 10px; /* same with indentation */
+//        height: 0;
+//        border-top: 1px solid;
+//        margin-top: -1px; /* border top width */
+//        position: absolute;
+//        top: 1em; /* (line-height/2) */
+//        left: 0;
+//      }
+//
+//      &:last-child{
+//        &:before{
+//          background: #fff; /* same with body background */
+//          height: auto;
+//          top: 1em; /* (line-height/2) */
+//          bottom: 0;
+//        }
+//      }
+//    }
+//
+//    ul {margin-left: .5em} /* (indentation/2) */
+//  }
+//}
 
 #new-project-form{
   margin-bottom: 20px;
@@ -135,9 +135,14 @@ h1{
 }
 
 #projects{
-  border: 0px solid black;
   border-top: 1px solid #ccc;
-  padding: 20px 0;
+  padding: 10px 0 10px ;
+
+  .root{
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+  }
 
   ul{
     list-style-type: none;
@@ -164,6 +169,12 @@ h1{
           position: absolute;
           right: 0;
           left: auto;
+          padding-left: 0;
+
+          li{
+            margin: 0;
+          }
+
         }
 
         .badge{

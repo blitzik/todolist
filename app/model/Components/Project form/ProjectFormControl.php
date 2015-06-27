@@ -49,11 +49,6 @@ class ProjectFormControl extends Control
      */
     private $parentProjectID;
 
-    /**
-     * @var string
-     */
-    private $projectName;
-
     public function __construct(
         EntityManager $entityManager,
         User $user
@@ -175,20 +170,18 @@ class ProjectFormControl extends Control
         if ($this->presenter->isAjax()) {
             $this->setAsVisible();
 
-            $this->projectName = $this->entityManager
-                                      ->createQuery(
-                                          'SELECT p.name as name FROM ' .Project::class.' p
-                                           WHERE p.id = :id AND p.owner = :owner'
-                                      )->setParameters(['id' => $this->parentProjectID,
-                                                        'owner' => $this->user->getIdentity()])
-                                      ->getResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
-
             if ($edit == true) {
-                $this['form']['name']->setDefaultValue($this->projectName);
+                $projectName = $this->entityManager
+                                          ->createQuery(
+                                              'SELECT p.name as name FROM ' .Project::class.' p
+                                               WHERE p.id = :id AND p.owner = :owner'
+                                          )->setParameters(['id' => $this->parentProjectID,
+                                                            'owner' => $this->user->getIdentity()])
+                                          ->getResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
+
+                $this['form']['name']->setDefaultValue($projectName);
                 $this['form']['editForm']->value = true;
                 $this['form']['save']->caption = 'Rename project';
-            } else {
-                $this['form']['name']->caption = 'New [' . $this->projectName . '\'s] sub project name:';
             }
             $this->redrawControl('projectForm');
         } else {
@@ -203,7 +196,6 @@ class ProjectFormControl extends Control
         $template->setFile(__DIR__ . '/template.latte');
 
         $template->visible = $this->visible;
-        $template->projectName = $this->projectName;
 
         $template->render();
     }

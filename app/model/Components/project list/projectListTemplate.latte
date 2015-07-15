@@ -1,19 +1,23 @@
 
 {snippet list}
 <div id="projects">
+
 {block listOfProjects}
 {if count($projects) > 0}
+{var $id = null}
 <ul>
     {foreach $projects as $project}
-    {var $id = $project['id']}
+    {? $id = $project['id']}
     <li n:class="$project['level'] == 1 ? root">
-        <div class="p-item" data-project-id="{$id}">
-            <a href="{plink Project:tasks 'id' => $id}">{$project['name']}
+        <div class="{ifCurrent Project:*, 'id'=>$id}active-project{else}p-item {/ifCurrent}" data-project-id="{$id}">
+            <a href="{plink Project:tasks 'id' => $id}"
+               n:snippet="project-name-$id">{$project['name']}
     {if $project['numberOfTasks'] > 0}
             <span class="badge" title="unfinished tasks">{$project['numberOfTasks']}</span>
     {/if}</a>
     <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle btn-xs"><span class="caret"></span></button>
         <ul class="dropdown-menu">
+            <li class="dropdown-header">{$project['name']}</li>
             <li n:if="$project['level'] < 3"><a href="{link projectForm-$id:showForm!}" class="ajax project-act">Add Project</a></li>
             <li><a href="{link projectForm-$id:showForm!, 'edit' => true}" class="ajax project-act">Rename</a></li>
             <li n:tag-if="!$iterator->isFirst() or !$iterator->isLast()" class="divider"></li>
@@ -31,7 +35,9 @@
 
         </ul>
     </div>
-    {control projectForm-$id}
+    {snippet project-form-$id}
+        {control projectForm-$id}
+    {/snippet}
 
         {if !empty($project['__children'])}
             {include listOfProjects, projects => $project['__children']}

@@ -3,6 +3,7 @@
 namespace TodoList\Components;
 
 use Nextras\Application\UI\SecuredLinksControlTrait;
+use TodoList\Facades\ProjectsFacade;
 use TodoList\Repositories\ProjectRepository;
 use Nette\Forms\Controls\SubmitButton;
 use Kdyby\Doctrine\EntityManager;
@@ -30,6 +31,11 @@ class ProjectFormControl extends Control
     private $projectRepository;
 
     /**
+     * @var ProjectsFacade
+     */
+    private $projectsFacade;
+
+    /**
      * @var
      */
     private $entityManager;
@@ -50,9 +56,11 @@ class ProjectFormControl extends Control
     private $parentProjectID;
 
     public function __construct(
+        ProjectsFacade $projectsFacade,
         EntityManager $entityManager,
         User $user
     ) {
+        $this->projectsFacade = $projectsFacade;
         $this->entityManager = $entityManager;
         $this->user = $user;
 
@@ -95,6 +103,7 @@ class ProjectFormControl extends Control
 
         $form->addSubmit('save', 'Create new project')
                 ->setAttribute('class', 'ajax btn btn-primary btn-sm')
+                ->setHtmlId('project-form-save-button')
                 ->onClick[] = [$this, 'processSaveProject'];
 
         $form->addSubmit('cancel', 'Cancel')
@@ -171,13 +180,11 @@ class ProjectFormControl extends Control
             $this->setAsVisible();
 
             if ($edit == true) {
-                $projectName = $this->entityManager
-                                          ->createQuery(
-                                              'SELECT p.name as name FROM ' .Project::class.' p
-                                               WHERE p.id = :id AND p.owner = :owner'
-                                          )->setParameters(['id' => $this->parentProjectID,
-                                                            'owner' => $this->user->getIdentity()])
-                                          ->getResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
+                $projectName = $this->projectsFacade
+                                    ->getProjectName(
+                                        $this->parentProjectID,
+                                        $this->user->getIdentity()
+                                    );
 
                 $this['form']['name']->setDefaultValue($projectName);
                 $this['form']['editForm']->value = true;
@@ -194,7 +201,6 @@ class ProjectFormControl extends Control
     {
         $template = $this->getTemplate();
         $template->setFile(__DIR__ . '/template.latte');
-
         $template->visible = $this->visible;
 
         $template->render();

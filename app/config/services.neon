@@ -9,8 +9,26 @@ services:
 	newProjectForm:
 		implement: TodoList\Components\IProjectFormControlFactory
 
+	filterBar:
+		implement: TodoList\Components\IFilterBarControlFactory
+
+	tasksList:
+		implement: TodoList\Components\ITasksListControlFactory
+		parameters: [Kdyby\Doctrine\QueryBuilder qb]
+		arguments: [%qb%]
+
+	taskForm:
+		implement: TodoList\Components\ITaskFormControlFactory
+
+	taskLabel:
+		implement: TodoList\Components\ITaskLabelControlFactory
+		parameters: [array task]
+		arguments: [%task%]
+
 	# Facades
+	- TodoList\Facades\ProjectsFacade
 	- TodoList\Facades\UsersFacade
+	- TodoList\Facades\TasksFacade
 
 	# Authenticator
 	- TodoList\Authenticators\Authenticator

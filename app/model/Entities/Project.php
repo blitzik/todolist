@@ -3,7 +3,6 @@
 namespace TodoList\Entities;
 
 use TodoList\LogicExceptions\InvalidArgumentException;
-use Doctrine\Common\Collections\ArrayCollection;
 use Kdyby\Doctrine\Entities\BaseEntity;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping\JoinColumn;

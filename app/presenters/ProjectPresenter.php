@@ -2,14 +2,22 @@
 
 namespace TodoList\Presenters;
 
-use Doctrine\ORM\AbstractQuery;
+use TodoList\RuntimeExceptions\TaskNotFoundException;
 use TodoList\Components\IProjectFormControlFactory;
-use TodoList\Repositories\ProjectRepository;
+use TodoList\Components\IFilterBarControlFactory;
+use TodoList\Components\ITasksListControlFactory;
+use TodoList\Components\ITaskFormControlFactory;
 use TodoList\Components\ProjectFormControl;
 use TodoList\Factories\RemoveFormFactory;
+use TodoList\Components\TaskFormControl;
 use Nette\Forms\Controls\SubmitButton;
+use TodoList\Facades\ProjectsFacade;
+use TodoList\Facades\TasksFacade;
+use Kdyby\Doctrine\QueryBuilder;
 use TodoList\Entities\Project;
 use Nette\Application\UI\Form;
+use TodoList\Entities\Task;
+use Tracy\Debugger;
 
 class ProjectPresenter extends SecurityPresenter
 {
@@ -26,63 +34,138 @@ class ProjectPresenter extends SecurityPresenter
     public $removeFormFactory;
 
     /**
-     * @var ProjectRepository
+     * @var ITaskFormControlFactory
+     * @inject
      */
-    private $projectRepository;
+    public $taskFormFactory;
+
+    /**
+     * @var ITasksListControlFactory
+     * @inject
+     */
+    public $tasksListFactory;
+
+    /**
+     * @var IFilterBarControlFactory
+     * @inject
+     */
+    public $filterBarFactory;
+
+    /**
+     * @var ProjectsFacade
+     * @inject
+     */
+    public $projectsFacade;
+
+    /**
+     * @var TasksFacade
+     * @inject
+     */
+    public $tasksFacade;
 
     /**
      * @var Project
      */
     private $project;
-    
 
-    protected function startup()
+    /**
+     * @var QueryBuilder
+     */
+    private $tasksQb;
+
+    /**
+     * @var Task
+     */
+    private $task;
+
+    protected function createComponentFilterBar()
     {
-        parent::startup();
-        $this->projectRepository = $this->em->getRepository(Project::class);
-    }
+        $comp = $this->filterBarFactory->create();
 
+        return $comp;
+    }
 
     public function actionTasks($id)
     {
+        $this->project = $this->projectsFacade->getProject($id);
+        if ($this->project === null) {
+            $this->flashMessage('Requested Project does not exist.', 'bg-warning');
+            $this->redirect('Homepage:default');
+        }
 
+        $this->tasksQb = $this->em->createQueryBuilder()
+            ->select('t.id, t.lft, t.rgt, t.level, t.root,
+                      t.description, t.deadline, t.priority,
+                      t.done, p.name as project_name, p.id as project_id')
+            ->from(Task::class, 't')
+            ->join(Project::class, 'p WITH p = t.project')
+            ->where('t.done = 0')
+            ->andWhere('t.deadline >= CURRENT_DATE()')
+            ->andWhere('t.project = :project')
+            ->setParameter('project', $this->project);
     }
 
     public function renderTasks($id)
     {
-
+        $this->template->project = $this->project;
     }
+
+    /**
+     * @Actions tasks
+     * @return \TodoList\Components\TasksListControl
+     */
+    protected function createComponentTasksList()
+    {
+        $comp = $this->tasksListFactory->create($this->tasksQb);
+
+        return $comp;
+    }
+
+    /*
+     * ADD Project
+     */
 
     public function actionAdd($id)
     {
-
+        $this->project = $this->projectsFacade->getProject($id);
+        if ($this->project === null) {
+            $this->flashMessage('Requested Project does not exist.', 'bg-warning');
+            $this->redirect('Homepage:default');
+        }
     }
 
     public function renderAdd($id)
     {
+        $this->template->project = $this->project;
 
     }
 
+    /*
+     * RENAME - PROJECT
+     */
+
     public function actionRename($id)
     {
-        $projectName = $this->em
-                            ->createQuery('SELECT p.name as name FROM ' .Project::class.' p
-                                           WHERE p.id = :id AND p.owner = :owner')
-                            ->setParameters(['id' => $id,
-                                             'owner' => $this->user->getIdentity()])
-                            ->getResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
+        $this->project = $this->projectsFacade->getProject($id);
+        if ($this->project === null) {
+            $this->flashMessage('Requested Project does not exist.', 'bg-warning');
+            $this->redirect('Homepage:default');
+        }
 
-        $this['newProjectForm']['form']['name']->setDefaultValue($projectName);
+        $this['newProjectForm']['form']['name']->setDefaultValue($this->project->name);
         $this['newProjectForm']['form']['editForm']->value = true;
         $this['newProjectForm']['form']['save']->caption = 'Rename project';
     }
 
     public function renderRename($id)
     {
-
+        $this->template->project = $this->project;
     }
 
-    protected function createComponentNewProjectForm()
+    /**
+     * @Actions add
+     */
+    protected function createComponentProjectForm()
     {
         $comp = $this->projectFormControlFactory->create();
         $comp->setParentProjectID($this->getParameter('id'));
@@ -112,13 +195,13 @@ class ProjectPresenter extends SecurityPresenter
         $this->redirect('Project:tasks', ['id' => $id]);
     }
 
+    /*
+     * REMOVE - PROJECT
+     */
+
     public function actionRemove($id)
     {
-        $this->project = $this->projectRepository
-                              ->findOneBy(
-                                  ['owner' => $this->user->getIdentity(),
-                                   'id' => $id]
-                              );
+        $this->project = $this->projectsFacade->getProject($id);
 
         if ($this->project === null) {
             $this->flashMessage('The Project you are looking for is no longer available.', 'bg-warning');
@@ -134,9 +217,13 @@ class ProjectPresenter extends SecurityPresenter
         $this->template->projectChildren = $r->getChildren($this->project);
     }
 
+    /**
+     * @Actions remove
+     */
     protected function createComponentRemoveProjectForm()
     {
         $form = $this->removeFormFactory->create();
+        $form->addProtection();
 
         $form->addText('test', 'Type "delete" without quotes')
                 //->setDefaultValue('delete')
@@ -165,4 +252,71 @@ class ProjectPresenter extends SecurityPresenter
     {
         $this->redirect('Project:tasks', ['id' => $this->project->id]);
     }
+
+    /**
+     * @param $id Project ID
+     * @param $parentTaskID
+     */
+    public function actionAddTask($id, $parentTaskID)
+    {
+        $this->project = $this->projectsFacade->getProject($id);
+
+        if ($this->project === null) {
+            $this->flashMessage('Requested Project does not exist.', 'bg-warning');
+            $this->redirect('Homepage:default');
+        }
+
+        if (isset($parentTaskID)) { // Add sub Task
+            try {
+                $parentTask = $this->tasksFacade->getTask($parentTaskID);
+                $this['taskForm']->setTask($parentTask, false);
+
+            } catch (TaskNotFoundException $e) {
+                $this->flashMessage('Requested Task does not exist.', 'bg-warning');
+                $this->redirect('Project:tasks', ['id' => $id]);
+            }
+        } else { // New root Task
+            $this['taskForm']->setProject($this->project);
+        }
+
+    }
+
+    public function renderAddTask($id, $parentTaskID)
+    {
+        $this->template->project = $this->project;
+    }
+
+    /**
+     * @Actions addTask
+     */
+    protected function createComponentTaskForm()
+    {
+        $comp = $this->taskFormFactory->create();
+        $comp->hideCancelButton();
+        $comp->setFormVisible();
+
+        $comp->onNewRootTask[] = [$this, 'onNewRootTask'];
+        $comp->onNewSubTask[] = [$this, 'onNewSubTask'];
+        $comp->onCancelClick[] = [$this, 'onCancelClick'];
+
+        return $comp;
+    }
+
+    public function onNewRootTask(TaskFormControl $formControl, Task $task)
+    {
+        $this->flashMessage('New Root Task has been successfully created.', 'bg-success');
+        $this->redirect('Project:tasks', ['id' => $task->project->getId()]);
+    }
+
+    public function onNewSubTask(TaskFormControl $formControl, Task $task)
+    {
+        $this->flashMessage('New Root Task has been successfully created.', 'bg-success');
+        $this->redirect('Project:tasks', ['id' => $task->project->getId()]);
+    }
+
+    public function onCancelClick(TaskFormControl $formControl)
+    {
+        $this->redirect('Project:tasks', ['id' => $formControl->getProject()->getId()]);
+    }
+
 }

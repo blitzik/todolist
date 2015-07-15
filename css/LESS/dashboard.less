@@ -5,6 +5,14 @@
   -khtml-border-radius: @radius; /* for old Konqueror browsers */
 }
 
+#ajax-spinner{
+  margin: 15px 0 0 15px;
+  padding: 13px;
+  background: white url('../images/spinner.gif') no-repeat 50% 50%;
+  font-size: 0;
+  z-index: 123456;
+}
+
 /*#404040*/
 
 body{
@@ -21,6 +29,10 @@ body{
 
 .content{
   padding-top: 25px;
+
+  h2{
+    margin-bottom: 0;
+  }
 }
 
 h1{
@@ -29,6 +41,10 @@ h1{
     color: #fff;
     &:hover{ color: #fff;}
   }
+}
+
+h2{
+  margin: 0 0 15px 0;
 }
 
 .head-title{
@@ -58,85 +74,19 @@ h1{
   }
 }
 
-/* ————————————————————–
-  Tree core styles
-*/
-
-//.tree,
-//.tree ul {
-//  margin: 0;
-//  padding: 0;
-//  list-style: none;
-//}
-//
-//.tree{
-//  margin-bottom: 50px;
-//
-//  a{
-//    text-decoration: underline;
-//    &:hover{ text-decoration: none}
-//  }
-//
-//  .node {
-//    margin: 0;
-//    padding: 0 1.5em; /* indentation + .5em */
-//    line-height: 2em; /* default list item's `line-height` */
-//    color: #369;
-//    font-weight: bold;
-//    position: relative;
-//  }
-//
-//  .parent {
-//    margin-left: 1em; /* indentation */
-//    position: relative;
-//
-//    &:before {
-//      content: "";
-//      display: block;
-//      width: 0;
-//      position: absolute;
-//      top: 0;
-//      bottom: 0;
-//      left: 0;
-//      border-left: 1px solid;
-//    }
-//
-//    li{
-//      &:before {
-//        content: "";
-//        display: block;
-//        width: 10px; /* same with indentation */
-//        height: 0;
-//        border-top: 1px solid;
-//        margin-top: -1px; /* border top width */
-//        position: absolute;
-//        top: 1em; /* (line-height/2) */
-//        left: 0;
-//      }
-//
-//      &:last-child{
-//        &:before{
-//          background: #fff; /* same with body background */
-//          height: auto;
-//          top: 1em; /* (line-height/2) */
-//          bottom: 0;
-//        }
-//      }
-//    }
-//
-//    ul {margin-left: .5em} /* (indentation/2) */
-//  }
-//}
-
 #new-project-form{
   margin-bottom: 20px;
   //border-top: 1px solid #ccc;
   padding-top: 20px;
 }
 
+.root-project-form{
+  margin-top: 35px;
+}
+
 #projects{
   border-top: 1px solid #ccc;
-  padding: 10px 0 10px ;
+  padding: 10px 0 10px 0;
 
   .root{
     margin-bottom: 10px;
@@ -153,7 +103,8 @@ h1{
     li{
       margin-bottom: 3px;
 
-      .p-item{
+      .p-item,
+      .active-project{
         position: relative;
         padding: 10px 8px;
         border: 1px solid #ccc;
@@ -167,18 +118,38 @@ h1{
 
         .dropdown-menu{
           position: absolute;
-          right: 0;
-          left: auto;
+          top: 15px;
+          left: 90%;
           padding-left: 0;
+
+          .dropdown-header{
+            font-weight: bold;
+          }
 
           li{
             margin: 0;
+            a{
+              color: #333;
+            }
           }
 
         }
 
         .badge{
           margin-left: 5px;
+        }
+      }
+
+      .active-project{
+        background-color: #404040;
+        border: 1px solid #404040;
+        a{
+          color: #fff;
+        }
+
+        .badge{
+          background-color: #f0f0f0;
+          color: #333;
         }
       }
 
@@ -194,3 +165,190 @@ h1{
   }
 }
 
+.task-form{
+  clear: both;
+  margin-bottom: 5px;
+
+  .form-group{
+    margin-bottom: 5px;
+
+    label{
+      border-bottom: 0;
+      &:hover{
+        border-bottom: 0;
+      }
+    }
+  }
+
+  textarea{
+    width: 100%;
+    height: 35px;
+    display: block;
+    margin-bottom: 5px;
+    padding: 5px;
+  }
+
+}
+
+.tree {
+  margin: 20px 0 70px 0;
+
+  .task {
+    margin-top: 50px;
+  }
+
+  @task-undone-color: #a0dfbf;
+  .task-undone{
+    background-color: @task-undone-color;
+    @task-undone-border: darken(@task-undone-color, 15%);
+    border: 1px solid @task-undone-border;
+    color: darken(@task-undone-color, 66%);
+    &:hover{
+      background-color: darken(@task-undone-color, 10%);
+      border: 1px solid darken(@task-undone-border, 10%);
+    }
+  }
+
+  .task-description{
+    overflow: auto;
+    clear: both;
+    padding-top: 2px;
+    margin-top: 50px;
+    margin-bottom: 5px;
+    //border: 1px solid red;
+  }
+
+  .task-info{
+    margin-bottom: 10px;
+  }
+
+  .due-date{
+    width: 100px;
+    text-align: center;
+    //float: right;
+    border: 1px solid #ccc;
+    padding: 3px;
+  }
+
+  @overdue-color: #F4D2D2;
+  .overdue{
+    border: 1px solid darken(@overdue-color, 20%);
+    background-color: @overdue-color;
+  }
+
+  .project-name{
+    background-color: #eaeee2;
+    margin-left: 5px;
+    padding: 3px;
+    border: 1px solid darken(#eaeee2, 15%);
+  }
+
+  .task-form {
+    input {
+      opacity: 1;
+      width: auto;
+      height: auto;
+      position: relative;
+      left: 0px;
+    }
+  }
+
+  ul {
+    padding-left: 40px;
+    &:first-of-type{
+      margin-top: 0;
+    }
+
+    li {
+      list-style-type: none;
+      color: #333;
+      position: relative;
+      margin-left: -15px;
+
+      .task-actions{
+        color: #333;
+        height: 15px;
+
+
+        ul{
+          padding-left: 0px;
+          li{
+            float: left;
+            margin-left: 0;
+            margin-right: 10px;
+          }
+        }
+
+      }
+    }
+    li label {
+      cursor: pointer;
+      display: block;
+      color: #333;
+      font-weight: normal;
+      border-bottom: 1px solid #ddd;
+      padding: 0px 0 5px 0;
+
+      &:hover{
+        border-bottom: 1px solid #000;
+      }
+
+      /*&:before{
+        content: '';
+        width: 16px;
+        height: 16px;
+        background: url("../images/task1.png") no-repeat 0px 0px;
+        position: absolute;
+        top: 32px;
+        left: 0px;
+      }*/
+    }
+    li input {
+      width: 1em;
+      height: 1em;
+      position: absolute;
+      left: -25px;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 100; // input must be in higher layer than triangle image
+    }
+    li input + ul {
+      &:before{
+        content: '';
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        top: 3px;
+        left: -26px;
+        background: url("../images/triangle-right.png") no-repeat 0px 0;
+      }
+    }
+    li input + ul > li {
+      display: none;
+      margin-left: -14px !important;
+      padding-left: 1px
+    }
+    li input:checked + ul {
+      height: auto;
+      margin: -28px 0 0 -44px;
+      padding: 25px 0 0 80px;
+      &:before{
+        content: '';
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        top: 3px;
+        left: -26px;
+        background: url("../images/triangle-down.png") no-repeat 0px 0px;
+      }
+    }
+    li input:checked + ul > li {
+      display: block;
+      margin: 0 0 0.063em;
+    }
+    li input:checked + ul > li:first-child {
+      margin: 0 0 0.125em;
+    }
+  }
+}

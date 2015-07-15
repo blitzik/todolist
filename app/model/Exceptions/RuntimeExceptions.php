@@ -11,3 +11,5 @@ class RuntimeException extends \RuntimeException {}
     class EmailDuplicityException extends RuntimeException {}
 
     class ProjectNotFoundException extends RuntimeException {}
+
+    class TaskNotFoundException extends RuntimeException {}

@@ -9,16 +9,19 @@
 
 	<link href="{$basePath}/css/bootstrap.min.css" rel="stylesheet">
 	<link href="{$basePath}/css/dashboard.css" rel="stylesheet">
+	<link href="{$basePath}/css/jquery-ui.min.css" rel="stylesheet">
 	<!--[if lt IE 9]>
         <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     {block scripts}
     	<script src="{$basePath}/js/jquery-1.11.2.min.js"></script>
+    	<script src="{$basePath}/js/jquery-ui.min.js"></script>
     	<script src="{$basePath}/js/netteForms.min.js"></script>
     	<script src="{$basePath}/js/nette.ajax.js"></script>
-    	<script src="{$basePath}/js/main.js"></script>
+    	<script src="{$basePath}/js/textarea.elastic.js"></script>
     	<script src="{$basePath}/js/bootstrap.min.js"></script>
+    	<script src="{$basePath}/js/main.js"></script>
     {/block}
 </head>
 
@@ -26,9 +29,12 @@
     <div class="container">
     <div class="row">
         <div class="col-xs-6 col-sm-4 col-md-3 left-side">
-        <h1><a href="{link Homepage:default}" class="head-title">Todo-list</a></h1>
-        <a href="{link projectForm:showForm!}" class="ajax">+ add Project</a>
-        {control projectForm}
+            <h1><a href="{link Homepage:default}" class="head-title">Todo-list</a></h1>
+
+        <div class="root-project-form">
+            <a href="{link rootProjectForm:showForm!}" class="ajax">+ add Project</a>
+            {control rootProjectForm}
+        </div>
 
         {snippet projectList}
             {control projectList}
@@ -36,8 +42,10 @@
         </div>
 
         <div class="col-xs-6 col-sm-8 col-md-9 content">
+
             <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
             {include content}
+
         </div>
 	</div>
 	</div>

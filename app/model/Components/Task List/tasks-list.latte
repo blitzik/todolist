@@ -1,0 +1,61 @@
+{snippet list}
+{var $isRootTask = true;}
+{var $taskID = null;}
+<div class="tree">
+{foreach $tasks as $key => $root}
+{block task}
+<ul n:class="$isRootTask ? task">
+
+    {foreach $root as $task}
+    {? $taskID = $task['id']}
+        <li>
+            <div class="task-description">
+                <div class="task-info">
+                    <span class="due-date{if $task['deadline'] < (new \DateTime())->setTime(0,0,0)} overdue{/if}">
+                        {$task['deadline']|date:'j M Y'}
+                    </span>
+                    {ifCurrent Homepage:default}
+                    <a href="{plink Project:tasks, id => $task['project_id']}"
+                       class="project-name">{$task['project_name']}</a>
+                    {/ifCurrent}
+                </div>
+
+                {control taskLabel-$taskID}
+             </div>
+
+            <div class="task-actions">
+                <ul>
+                    <li>
+                        <a href="{link markAsDone!, taskID => $taskID}"
+                           class="btn btn-default btn-sm task-undone">Mark as finished</a></li>
+
+                    <li n:if="$isAddTaskVisible == true and $task['level'] < 2">
+                        <a href="{plink Project:addTask, id => $task['project_id'],
+                                                         parentTaskID => $taskID}" class="btn btn-default btn-sm">+ Add task</a></li>
+
+                    <li n:if="$isEditButtonVisible == true">
+                        <a class="ajax btn btn-default btn-sm" href="{link taskLabel-$taskID:editLabel!}">Edit</a>
+                    </li>
+                    <li n:if="$isRemoveButtonVisible == true">
+                        <a href="{link removeTask!, taskID => $taskID}" class="btn btn-default btn-sm">Remove</a>
+                    </li>
+                </ul>
+            </div>
+            <input type="checkbox" id="task-{$task['id']}"
+                   n:if="!empty($task['__children'])">
+
+
+        {if !empty($task['__children'])}
+            {? $isRootTask = false}
+            {include task, root => $task['__children']}
+        {/if}
+        </li>
+    {/foreach}
+
+</ul>
+{/block}
+{? $isRootTask = true}
+
+{/foreach}
+</div>
+{/snippet}

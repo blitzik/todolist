@@ -1,0 +1,43 @@
+{snippet taskForm}
+{if $isVisible === true}
+<div class="task-form">
+{form form}
+    <div class="form-group">
+        {label description /}
+        {input description}
+    </div>
+    <div class="form-group">
+        {label date /}
+        {input date}
+    </div>
+    {input save class => 'btn btn-primary btn-sm'}
+    {if $isCancelButtonVisible}
+        {input cancel class => 'btn btn-default btn-sm'}
+    {/if}
+{/form}
+</div>
+
+<script>
+$(function () {
+    $('input.datepicker').datepicker({
+        //changeMonth: true,
+        //changeYear: true,
+        //dateFormat: 'mm/dd/yy',
+        dateFormat: 'dd.mm.yy',
+        yearRange: '2010:2020',
+        {*if isset($isEditForm)}
+            {if $isEditForm === true}
+                {if !$task->level == 0}
+                maxDate: new Date({$task->parent->deadline->format('Y-m-d')})
+                {/if}
+            {else}
+            maxDate: new Date({$task->deadline->format('Y-m-d')})
+            {/if}
+        {else}
+        maxDate: new Date()
+        {/if*}
+    });
+});
+</script>
+{/if}
+{/snippet}

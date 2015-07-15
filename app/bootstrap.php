@@ -1,5 +1,7 @@
 <?php
 
+use Nette\Application\UI\Form;
+
 require __DIR__ . '/../../../vendor/autoload.php';
 
 $configurator = new Nette\Configurator;

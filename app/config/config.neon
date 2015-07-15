@@ -24,6 +24,7 @@ extensions:
 	gedmo: Rixxi\Gedmo\Di\OrmExtension
 
 doctrine:
+	defaultRepositoryClassName: Kdyby\Doctrine\EntityRepository
 	metadata:
 		TodoList\Entities: %appDir%/model/Entities
 

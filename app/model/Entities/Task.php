@@ -2,16 +2,23 @@
 
 namespace TodoList\Entities;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Kdyby\Doctrine\Entities\BaseEntity;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping\JoinColumn;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Index;
 use Nette\Utils\Validators;
 
 /**
  * @Gedmo\Tree(type="nested")
  * @ORM\Entity(repositoryClass="TodoList\Repositories\TaskRepository")
- * @ORM\Table(name="task")
+ * @ORM\Table(
+ *     name="task",
+ *     indexes={
+ *         @Index(name="done_deadline_project_id", columns={"done", "deadline", "project_id"})
+ *     }
+ * )
  */
 class Task extends BaseEntity
 {
@@ -73,7 +80,7 @@ class Task extends BaseEntity
     protected $parent;
 
     /**
-     * @ORM\Column(name="deadline", type="datetime", nullable=true, unique=false)
+     * @ORM\Column(name="deadline", type="date", nullable=true, unique=false)
      * @var \DateTime|null
      */
     protected $deadline;
@@ -88,13 +95,13 @@ class Task extends BaseEntity
      * @ORM\Column(name="done", type="boolean", nullable=false, unique=false)
      * @var boolean
      */
-    protected $done;
+    protected $done = false;
 
 
     public function __construct(
         $description,
         Project $project,
-        \DateTime $deadline = null,
+        \DateTime $deadline,
         Task $parent = null
     ) {
         $this->setDescription($description);
@@ -103,13 +110,19 @@ class Task extends BaseEntity
         $this->parent = $parent;
     }
 
+    public function getSubTasks()
+    {
+        return $this->subTasks->toArray();
+    }
+
     /**
      * @param string $description
      */
     public function setDescription($description)
     {
-        Validators::assert($description, 'string:1..1000');
-        $this->description = $description;
+        $desc = trim($description);
+        Validators::assert($desc, 'string:1..1000');
+        $this->description = $desc;
     }
 
     /**
@@ -121,7 +134,7 @@ class Task extends BaseEntity
     }
 
     /**
-     * @param \DateTime|null $deadline
+     * @param \DateTime $deadline
      */
     public function setDeadline($deadline)
     {
@@ -135,6 +148,46 @@ class Task extends BaseEntity
     {
         Validators::assert($priority, 'numerictint:0..');
         $this->priority = $priority;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRoot()
+    {
+        return $this->root;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLevel()
+    {
+        return $this->level;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRgt()
+    {
+        return $this->rgt;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLft()
+    {
+        return $this->lft;
+    }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 
 

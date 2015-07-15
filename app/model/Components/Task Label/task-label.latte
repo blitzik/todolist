@@ -1,0 +1,6 @@
+{var $id = $task['id']}
+<label for="task-{$id}" n:snippet="task-label">{$task['description']}</label>
+
+{snippet labelForm}
+    {control taskForm}
+{/snippet}

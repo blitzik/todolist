@@ -10,6 +10,7 @@ use TodoList\Components\ProjectFormControl;
 use Nette\Application\UI\Presenter;
 use Kdyby\Doctrine\EntityManager;
 use Nette\Http\UserStorage;
+use Tracy\Debugger;
 
 class SecurityPresenter extends Presenter
 {
@@ -56,6 +57,32 @@ class SecurityPresenter extends Presenter
         }
     }
 
+    protected function createComponent($name)
+    {
+        $ucname = ucfirst($name);
+        $method = 'createComponent' . $ucname;
+
+        $presenterReflection = $this->getReflection();
+        if ($presenterReflection->hasMethod($method)) {
+            $methodReflection = $presenterReflection->getMethod($method);
+            $this->checkRequirements($methodReflection);
+
+            if ($methodReflection->hasAnnotation('Actions')) {
+                $actions = explode(',', $methodReflection->getAnnotation('Actions'));
+                foreach ($actions as $key => $action) {
+                    $actions[$key] = trim($action);
+                }
+
+                if (!empty($actions) and !in_array($this->getAction(), $actions)) {
+                    throw new \Nette\Application\ForbiddenRequestException("Creation of component '$name' is forbidden for action '$this->action'.");
+                }
+            }
+        }
+
+        return parent::createComponent($name);
+    }
+
+
     protected function createComponentProjectList()
     {
         $comp = $this->projectListFactory->create();
@@ -71,7 +98,7 @@ class SecurityPresenter extends Presenter
     public function onProjectMovement(ProjectListControl $projectListControl)
     {
         if ($this->isAjax()) {
-            $projectListControl->redrawControl('list');
+            $this->redrawControl('projectList');
         } else {
             $this->redirect('this');
         }
@@ -79,17 +106,15 @@ class SecurityPresenter extends Presenter
 
     public function onEditProject(ProjectFormControl $projectFormControl, $id)
     {
-        if ($this->isAjax()) {
-            $projectFormControl->hideForm();
-            $projectFormControl->redrawControl('projectForm');
-            $this->redrawControl('projectList');
-        } else {
-
+        if (!$this->isAjax()) {
             $this->redirect('this');
         }
     }
 
-    protected function createComponentProjectForm() // new Root project (not sub project)
+    /**
+     * @return ProjectFormControl
+     */
+    protected function createComponentRootProjectForm() // new Root project (not sub project)
     {
         $comp = $this->newProjectFormFactory->create();
 
@@ -106,7 +131,6 @@ class SecurityPresenter extends Presenter
             $projectFormControl->redrawControl('projectForm');
             $this->redrawControl('projectList');
         } else {
-
             $this->redirect('this');
         }
     }

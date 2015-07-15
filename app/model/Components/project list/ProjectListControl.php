@@ -49,6 +49,11 @@ class ProjectListControl extends Control
      */
     private $em;
 
+    /**
+     * @var array|Project[]
+     */
+    private $projects;
+
     public function __construct(
         IProjectFormControlFactory $projectFormControlFactory,
         EntityManager $em,
@@ -68,15 +73,25 @@ class ProjectListControl extends Control
             $comp = $this->projectFormControlFactory->create();
             $comp->setParentProjectID($parentID);
 
-            $comp->onCancelClick[] = function ($comp) {
+            $comp->onCancelClick[] = function (ProjectFormControl $comp) {
                 $this->onProjectFormCancelClick($comp);
             };
 
-            $comp->onNewProject[] = function ($comp) use ($parentID) {
+            $comp->onNewProject[] = function (ProjectFormControl $comp) use ($parentID) {
                 $this->onNewProject($comp, $parentID);
             };
 
-            $comp->onEditProject[] = function ($comp) use ($parentID) {
+            $comp->onEditProject[] = function (ProjectFormControl $comp) use ($parentID) {
+                $qb = $this->dql();
+                $qb->where('p.id = :id')
+                   ->groupBy('p.id')
+                   ->setParameter('id', $parentID);
+
+                $this->projects = $qb->getQuery()->getArrayResult();
+
+                $comp->hideForm();
+                $this->redrawControl('list');
+
                 $this->onEditProject($comp, $parentID);
             };
 
@@ -106,29 +121,44 @@ class ProjectListControl extends Control
         $this->onFinishedProjectMovement($this);
     }
 
+    /**
+     * @return \Doctrine\ORM\QueryBuilder|\Kdyby\Doctrine\QueryBuilder
+     */
+    private function dql()
+    {
+        // Tasks that haven't been finished yet
+        $tasksCount = $this->taskRepository->createQueryBuilder('t2')
+                           ->select('COUNT(t2.id)')
+                           ->where('t2.done = 0 AND t2.deadline >= CURRENT_DATE() AND t2.project = p AND t2.level = 0')
+                           ->groupBy('t2.project');
+
+        $projects = $this->projectRepository->createQueryBuilder('p')
+                         ->select('p.id as id, p.lft as lft, p.rgt as rgt,
+                                                p.level as level, p.root as root, p.name as name')
+                         ->addSelect("($tasksCount) as numberOfTasks")
+                         ->leftJoin(Task::class, 't WITH t.project = p');
+
+        return $projects;
+    }
+
     public function render()
     {
         $template = $this->getTemplate();
         $template->setFile(__DIR__ . '/projectListTemplate.latte');
 
-        // Tasks that haven't been finished yet
-        $tasksCount = $this->taskRepository->createQueryBuilder('t2')
-                           ->select('COUNT(t2.id)')
-                           ->where('t2.project = p AND t2.done = 0')
-                           ->groupBy('t2.project');
+        //Debugger::fireLog('F- ' . count($this->projects));
+        if (empty($this->projects)) {
+            $qb = $this->dql($this->user->getIdentity());
+            $qb->where('p.owner = :owner AND p.lft > 1')
+               ->groupBy('p.lft, p.id')
+               ->setParameter('owner', $this->user->getIdentity());
 
-        $projects = $this->projectRepository->createQueryBuilder('p')
-                         ->select('p.id as id, p.lft as lft, p.rgt as rgt,
-                                   p.level as level, p.root as root, p.name as name')
-                         ->addSelect("($tasksCount) as numberOfTasks")
-                         ->leftJoin(Task::class, 't WITH t.project = p')
-                         ->where('p.owner = :owner AND p.lft > 1')
-                         ->groupBy('p.lft, p.id')
-                         ->setParameter('owner', $this->user->getIdentity()->getId());
+            $this->projects = $qb->getQuery()->getArrayResult();
+        }
 
-        $result = $projects->getQuery()->getArrayResult();
-
-        $template->projects = $this->projectRepository->buildTreeArray($result);
+        //Debugger::fireLog(count($this->projects));
+        $template->projects = $this->projectRepository
+                                   ->buildTreeArray($this->projects);
 
         $template->render();
     }

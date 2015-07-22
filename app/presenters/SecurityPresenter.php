@@ -9,8 +9,8 @@ use TodoList\Components\ProjectListControl;
 use TodoList\Components\ProjectFormControl;
 use Nette\Application\UI\Presenter;
 use Kdyby\Doctrine\EntityManager;
+use TodoList\Entities\Project;
 use Nette\Http\UserStorage;
-use Tracy\Debugger;
 
 class SecurityPresenter extends Presenter
 {
@@ -104,7 +104,7 @@ class SecurityPresenter extends Presenter
         }
     }
 
-    public function onEditProject(ProjectFormControl $projectFormControl, $id)
+    public function onEditProject(ProjectFormControl $projectFormControl, Project $project)
     {
         if (!$this->isAjax()) {
             $this->redirect('this');
@@ -124,7 +124,7 @@ class SecurityPresenter extends Presenter
         return $comp;
     }
 
-    public function onNewProject(ProjectFormControl $projectFormControl, $id)
+    public function onNewProject(ProjectFormControl $projectFormControl, Project $project)
     {
         if ($this->isAjax()) {
             $projectFormControl->hideForm();

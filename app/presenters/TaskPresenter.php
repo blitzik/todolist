@@ -76,7 +76,7 @@ class TaskPresenter extends SecurityPresenter
         return $comp;
     }
 
-    public function onEditTask(TaskFormControl $formControl, Task $task)
+    public function onEditTask(TaskFormControl $formControl, Task $task, $wasOverdue)
     {
         $this->flashMessage('Your Task has been successfully edited.', 'bg-success');
         if ($task->deadline < (new \DateTime('now'))) {

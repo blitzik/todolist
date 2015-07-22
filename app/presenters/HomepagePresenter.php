@@ -36,6 +36,7 @@ class HomepagePresenter extends SecurityPresenter
                    ->where('t.done = 0 AND
                             t.deadline < CURRENT_DATE()')
                    ->andWhere("t.project IN($projectsQb)")
+                   ->orderBy('t.root DESC, t.lft')
                    ->setParameter('pr_owner', $this->user->getIdentity());
 
         $this->overdueTasksQb = $tasksQb;

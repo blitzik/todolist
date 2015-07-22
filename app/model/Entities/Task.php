@@ -16,7 +16,9 @@ use Nette\Utils\Validators;
  * @ORM\Table(
  *     name="task",
  *     indexes={
- *         @Index(name="done_deadline_project_id", columns={"done", "deadline", "project_id"})
+ *         @Index(name="done_deadline_project_id_root_lft", columns={"done", "deadline", "project_id", "root", "lft"}),
+ *         @Index(name="root_rgt", columns={"root", "rgt"}),
+ *         @Index(name="root_lft", columns={"root", "lft"})
  *     }
  * )
  */

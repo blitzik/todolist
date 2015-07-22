@@ -2,6 +2,9 @@
 {if $isVisible === true}
 <div class="task-form">
 {form form}
+<div class="bg-danger error" n:if="$form->hasErrors()" n:foreach="$form->errors as $error">
+    {$error}
+</div>
     <div class="form-group">
         {label description /}
         {input description}
@@ -19,23 +22,26 @@
 
 <script>
 $(function () {
-    $('input.datepicker').datepicker({
-        //changeMonth: true,
-        //changeYear: true,
-        //dateFormat: 'mm/dd/yy',
+    var datepicker = $('input.datepicker');
+    datepicker.prop('readonly', true);
+
+    datepicker.datepicker({
+        {*}changeMonth: true,{*}
+        {*}changeYear: true,{*}
+        {*}dateFormat: 'mm/dd/yy',{*}
         dateFormat: 'dd.mm.yy',
         yearRange: '2010:2020',
-        {*if isset($isEditForm)}
+        {if isset($task)}
             {if $isEditForm === true}
-                {if !$task->level == 0}
-                maxDate: new Date({$task->parent->deadline->format('Y-m-d')})
+                minDate: new Date({$lowestDeadline->format('Y-m-d')}),
+                {if $highestDeadline !== null} {*}There is no upper deadline restriction for Root Task{*}
+                maxDate: new Date({$highestDeadline->format('Y-m-d')})
                 {/if}
             {else}
-            maxDate: new Date({$task->deadline->format('Y-m-d')})
+            minDate: new Date(),
+            maxDate: new Date({$lastChildDeadline->format('Y-m-d')})
             {/if}
-        {else}
-        maxDate: new Date()
-        {/if*}
+        {/if}
     });
 });
 </script>

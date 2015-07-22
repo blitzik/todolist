@@ -3,17 +3,19 @@
 namespace TodoList\Components;
 
 use Nextras\Application\UI\SecuredLinksControlTrait;
-use TodoList\Facades\ProjectsFacade;
 use TodoList\Repositories\ProjectRepository;
 use Nette\Forms\Controls\SubmitButton;
+use TodoList\Facades\ProjectsFacade;
 use Kdyby\Doctrine\EntityManager;
 use Nette\Application\UI\Control;
-use Doctrine\ORM\AbstractQuery;
 use Nette\Application\UI\Form;
 use TodoList\Entities\Project;
 use Nette\Security\User;
-use Tracy\Debugger;
 
+/**
+ * If there is no Project set, a new Root Project will be created.
+ *
+ */
 class ProjectFormControl extends Control
 {
     use SecuredLinksControlTrait;
@@ -51,9 +53,9 @@ class ProjectFormControl extends Control
     private $visible = false;
 
     /**
-     * @var int
+     * @var Project
      */
-    private $parentProjectID;
+    private $project;
 
     public function __construct(
         ProjectsFacade $projectsFacade,
@@ -68,19 +70,11 @@ class ProjectFormControl extends Control
     }
 
     /**
-     * @param int $parentProjectID
+     * @param Project $project
      */
-    public function setParentProjectID($parentProjectID)
+    public function setProject(Project $project = null)
     {
-        $this->parentProjectID = $parentProjectID;
-    }
-
-    /**
-     * @return Project
-     */
-    public function getParentProjectID()
-    {
-        return $this->parentProjectID;
+        $this->project = $project;
     }
 
     public function setAsVisible()
@@ -102,19 +96,22 @@ class ProjectFormControl extends Control
                 ->setAttribute('class', 'input-project-name');
 
         $form->addSubmit('save', 'Create new project')
-                ->setAttribute('class', 'ajax btn btn-primary btn-sm')
+                ->setAttribute('class', 'btn btn-primary btn-sm')
                 ->setHtmlId('project-form-save-button')
                 ->onClick[] = [$this, 'processSaveProject'];
 
         $form->addSubmit('cancel', 'Cancel')
                 ->setValidationScope([])
-                ->setAttribute('class', 'ajax btn btn-default btn-sm')
+                ->setAttribute('class', 'btn btn-default btn-sm')
                 ->onClick[] = [$this, 'processCancel'];
 
-        $form->addHidden('parent', $this->parentProjectID);
-        $form->addHidden('editForm', false);
+        $form->addHidden('parent', (isset($this->project) ? $this->project->getId() : null));
+        $form->addHidden('isEditForm', false); // default form is for Projects addition
 
         $form->getElementPrototype()->id = 'new-project-form';
+        $form->getElementPrototype()->class = 'ajax';
+
+        $form->addProtection();
 
         return $form;
     }
@@ -122,47 +119,30 @@ class ProjectFormControl extends Control
     public function processSaveProject(SubmitButton $button)
     {
         $values = $button->getForm()->getValues();
+        if ($values['isEditForm'] == true) {
+            $this->project->setName($values['name']);
+            $this->entityManager->persist($this->project)->flush();
 
-        $parent = null;
-        if (empty($values['parent'])) {
-            $parent = $this->projectRepository
-                           ->findOneBy(['owner' => $this->user->getIdentity(),
-                                        'lft' => 1]
-                           );
-        } else {
-            $parent = $this->projectRepository
-                           ->findOneBy(['id' => $values['parent'],
-                                        'owner' => $this->user->getIdentity()]
-                           );
-        }
+            $this->onEditProject($this, $this->project);
 
-        if ($parent === null) {
-            $this->flashMessage('An Error occurred while adding new Project.', 'bg-danger');
-            if ($this->presenter->isAjax()) {
-                $this->redrawControl('projectForm');
-                return;
-            } else {
-                $this->redirect('this');
+        } else { // root or sub project edition
+
+            $parent = $this->project;
+            if ($parent === null) {
+                $parent = $this->projectRepository
+                               ->findOneBy(['owner' => $this->user->getIdentity(),
+                                            'lft' => 1]);
             }
-        }
 
-        if ($values['editForm'] == false) {
             $project = new Project(
                 $values['name'],
                 $this->user->getIdentity(),
                 $parent
             );
 
-            $this->projectRepository->persistAsLastChildOf($project, $parent);
-            $this->entityManager->flush();
+            $this->entityManager->persist($project)->flush();
 
-            $this->onNewProject($this, $project->getId());
-
-        } else {
-            $parent->setName($values['name']);
-            $this->entityManager->persist($parent)->flush();
-
-            $this->onEditProject($this, $parent->getId());
+            $this->onNewProject($this, $project);
         }
     }
 
@@ -174,26 +154,25 @@ class ProjectFormControl extends Control
     /**
      * @secured
      */
-    public function handleShowForm($edit = false)
+    public function handleShowForm($editForm)
     {
         if ($this->presenter->isAjax()) {
             $this->setAsVisible();
-
-            if ($edit == true) {
-                $projectName = $this->projectsFacade
-                                    ->getProjectName(
-                                        $this->parentProjectID,
-                                        $this->user->getIdentity()
-                                    );
-
-                $this['form']['name']->setDefaultValue($projectName);
-                $this['form']['editForm']->value = true;
+            if ($editForm == true) {
+                $this['form']['name']->setDefaultValue($this->project->name);
                 $this['form']['save']->caption = 'Rename project';
+                $this['form']['isEditForm']->value = true;
             }
+
             $this->redrawControl('projectForm');
         } else {
-            $link = $edit == true ? 'Project:rename' : 'Project:add';
-            $this->presenter->redirect($link, ['id' => $this->parentProjectID]);
+            $link = $editForm == true ? 'Project:rename' : 'Project:add';
+            $params = [];
+            if (isset($this->project)) {
+                $params['id'] = $this->project->getId();
+            }
+
+            $this->presenter->redirect($link, $params);
         }
     }
 

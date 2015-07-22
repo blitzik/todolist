@@ -17,7 +17,6 @@ use Kdyby\Doctrine\QueryBuilder;
 use TodoList\Entities\Project;
 use Nette\Application\UI\Form;
 use TodoList\Entities\Task;
-use Tracy\Debugger;
 
 class ProjectPresenter extends SecurityPresenter
 {
@@ -73,11 +72,6 @@ class ProjectPresenter extends SecurityPresenter
      */
     private $tasksQb;
 
-    /**
-     * @var Task
-     */
-    private $task;
-
     protected function createComponentFilterBar()
     {
         $comp = $this->filterBarFactory->create();
@@ -102,6 +96,7 @@ class ProjectPresenter extends SecurityPresenter
             ->where('t.done = 0')
             ->andWhere('t.deadline >= CURRENT_DATE()')
             ->andWhere('t.project = :project')
+            ->orderBy('t.root DESC, t.lft')
             ->setParameter('project', $this->project);
     }
 
@@ -127,17 +122,18 @@ class ProjectPresenter extends SecurityPresenter
 
     public function actionAdd($id)
     {
-        $this->project = $this->projectsFacade->getProject($id);
-        if ($this->project === null) {
-            $this->flashMessage('Requested Project does not exist.', 'bg-warning');
-            $this->redirect('Homepage:default');
+        if ($id != null) {
+            $this->project = $this->projectsFacade->getProject($id);
+            if ($this->project === null) {
+                $this->flashMessage('Requested Project does not exist.', 'bg-warning');
+                $this->redirect('Homepage:default');
+            }
         }
     }
 
     public function renderAdd($id)
     {
         $this->template->project = $this->project;
-
     }
 
     /*
@@ -152,9 +148,9 @@ class ProjectPresenter extends SecurityPresenter
             $this->redirect('Homepage:default');
         }
 
-        $this['newProjectForm']['form']['name']->setDefaultValue($this->project->name);
-        $this['newProjectForm']['form']['editForm']->value = true;
-        $this['newProjectForm']['form']['save']->caption = 'Rename project';
+        $this['projectForm']['form']['name']->setDefaultValue($this->project->name);
+        $this['projectForm']['form']['isEditForm']->value = true;
+        $this['projectForm']['form']['save']->caption = 'Rename project';
     }
 
     public function renderRename($id)
@@ -163,12 +159,12 @@ class ProjectPresenter extends SecurityPresenter
     }
 
     /**
-     * @Actions add
+     * @Actions add, rename
      */
     protected function createComponentProjectForm()
     {
         $comp = $this->projectFormControlFactory->create();
-        $comp->setParentProjectID($this->getParameter('id'));
+        $comp->setProject($this->project);
         $comp->setAsVisible();
 
         $comp->onCancelClick[] = [$this, 'processProjectFormCancelClick'];
@@ -183,16 +179,16 @@ class ProjectPresenter extends SecurityPresenter
         $this->redirect('Project:tasks', ['id' => $projectFormControl->getParentProjectID()]);
     }
 
-    public function onNewProject(ProjectFormControl $projectFormControl, $id)
+    public function onNewProject(ProjectFormControl $projectFormControl, Project $project)
     {
         $this->presenter->flashMessage('New Project has been successfully created.', 'bg-success');
-        $this->redirect('Project:tasks', ['id' => $id]);
+        $this->redirect('Project:tasks', ['id' => $project->getId()]);
     }
 
-    public function onEditProject(ProjectFormControl $projectFormControl, $id)
+    public function onEditProject(ProjectFormControl $projectFormControl, Project $project)
     {
         $this->flashMessage('Project has been successfully renamed.', 'bg-success');
-        $this->redirect('Project:tasks', ['id' => $id]);
+        $this->redirect('Project:tasks', ['id' => $project->getId()]);
     }
 
     /*
@@ -297,7 +293,6 @@ class ProjectPresenter extends SecurityPresenter
 
         $comp->onNewRootTask[] = [$this, 'onNewRootTask'];
         $comp->onNewSubTask[] = [$this, 'onNewSubTask'];
-        $comp->onCancelClick[] = [$this, 'onCancelClick'];
 
         return $comp;
     }
@@ -312,11 +307,6 @@ class ProjectPresenter extends SecurityPresenter
     {
         $this->flashMessage('New Root Task has been successfully created.', 'bg-success');
         $this->redirect('Project:tasks', ['id' => $task->project->getId()]);
-    }
-
-    public function onCancelClick(TaskFormControl $formControl)
-    {
-        $this->redirect('Project:tasks', ['id' => $formControl->getProject()->getId()]);
     }
 
 }

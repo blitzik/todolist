@@ -1,6 +1,19 @@
+<div class="task-description">
 {var $id = $task['id']}
-<label for="task-{$id}" n:snippet="task-label">{$task['description']}</label>
+    <div class="task-info">
+        <span class="due-date{if $task['deadline'] < (new \DateTime())->setTime(0,0,0)} overdue{/if}"
+              n:snippet="task-deadline">
+            {$task['deadline']|date:'j M Y'}
+        </span>
+        {ifCurrent Homepage:default}
+        <a href="{plink Project:tasks, id => $task['project_id']}"
+           class="project-name">{$task['project_name']}</a>
+        {/ifCurrent}
+    </div>
+    <label for="task-{$id}" n:snippet="task-label">{$task['description']}</label>
 
 {snippet labelForm}
     {control taskForm}
 {/snippet}
+
+</div>

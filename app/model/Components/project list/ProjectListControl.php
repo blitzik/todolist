@@ -68,31 +68,32 @@ class ProjectListControl extends Control
     }
 
     protected function createComponentProjectForm()
-    {
+    { // for editing and adding new Sub Projects only
         return new Multiplier(function ($parentID) {
+
             $comp = $this->projectFormControlFactory->create();
-            $comp->setParentProjectID($parentID);
+            $comp->setProject($this->em->getReference(Project::class, $parentID));
 
             $comp->onCancelClick[] = function (ProjectFormControl $comp) {
                 $this->onProjectFormCancelClick($comp);
             };
 
-            $comp->onNewProject[] = function (ProjectFormControl $comp) use ($parentID) {
-                $this->onNewProject($comp, $parentID);
+            $comp->onNewProject[] = function (ProjectFormControl $comp, Project $project) {
+                $this->onNewProject($comp, $project);
             };
 
-            $comp->onEditProject[] = function (ProjectFormControl $comp) use ($parentID) {
+            $comp->onEditProject[] = function (ProjectFormControl $comp, Project $project) {
                 $qb = $this->dql();
                 $qb->where('p.id = :id')
                    ->groupBy('p.id')
-                   ->setParameter('id', $parentID);
+                   ->setParameter('id', $project->getId());
 
                 $this->projects = $qb->getQuery()->getArrayResult();
 
                 $comp->hideForm();
                 $this->redrawControl('list');
 
-                $this->onEditProject($comp, $parentID);
+                $this->onEditProject($comp, $project);
             };
 
             return $comp;
@@ -146,7 +147,6 @@ class ProjectListControl extends Control
         $template = $this->getTemplate();
         $template->setFile(__DIR__ . '/projectListTemplate.latte');
 
-        //Debugger::fireLog('F- ' . count($this->projects));
         if (empty($this->projects)) {
             $qb = $this->dql($this->user->getIdentity());
             $qb->where('p.owner = :owner AND p.lft > 1')
@@ -156,7 +156,6 @@ class ProjectListControl extends Control
             $this->projects = $qb->getQuery()->getArrayResult();
         }
 
-        //Debugger::fireLog(count($this->projects));
         $template->projects = $this->projectRepository
                                    ->buildTreeArray($this->projects);
 

@@ -19,7 +19,7 @@
         <ul class="dropdown-menu">
             <li class="dropdown-header">{$project['name']}</li>
             <li n:if="$project['level'] < 3"><a href="{link projectForm-$id:showForm!}" class="ajax project-act">Add Project</a></li>
-            <li><a href="{link projectForm-$id:showForm!, 'edit' => true}" class="ajax project-act">Rename</a></li>
+            <li><a href="{link projectForm-$id:showForm!, 'editForm' => true}" class="ajax project-act">Rename</a></li>
             <li n:tag-if="!$iterator->isFirst() or !$iterator->isLast()" class="divider"></li>
 
             {if !$iterator->isFirst()}

@@ -1,6 +1,11 @@
 {block content}
 
-<h2>{$project->name} - new Project</h2>
+<h2>{if isset($project)}
+        {$project->name} - new Project
+    {else}
+        New Root Project
+    {/if}
+</h2>
 
 {control projectForm}
 

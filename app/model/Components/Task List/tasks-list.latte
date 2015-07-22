@@ -1,4 +1,6 @@
 {snippet list}
+<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+
 {var $isRootTask = true;}
 {var $taskID = null;}
 <div class="tree">
@@ -9,19 +11,7 @@
     {foreach $root as $task}
     {? $taskID = $task['id']}
         <li>
-            <div class="task-description">
-                <div class="task-info">
-                    <span class="due-date{if $task['deadline'] < (new \DateTime())->setTime(0,0,0)} overdue{/if}">
-                        {$task['deadline']|date:'j M Y'}
-                    </span>
-                    {ifCurrent Homepage:default}
-                    <a href="{plink Project:tasks, id => $task['project_id']}"
-                       class="project-name">{$task['project_name']}</a>
-                    {/ifCurrent}
-                </div>
-
-                {control taskLabel-$taskID}
-             </div>
+            {control taskLabel-$taskID}
 
             <div class="task-actions">
                 <ul>

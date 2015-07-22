@@ -5,12 +5,10 @@ namespace TodoList\Components;
 use Kdyby\Doctrine\EntityManager;
 use Nette\Application\UI\Control;
 use TodoList\Entities\Task;
+use Tracy\Debugger;
 
 class TaskLabelControl extends Control
 {
-    /** @persistent */
-    public $backlink = null;
-
     /**
      * @var ITaskFormControlFactory
      */
@@ -46,9 +44,15 @@ class TaskLabelControl extends Control
 
         $comp->onEditTask[] = function (
             TaskFormControl $taskFormControl,
-            Task $task
+            Task $task,
+            $wasOverdue
         ) {
+            // was Task overdue before change?
+            if ($wasOverdue and $task->deadline >= (new \DateTime('now'))) {
+                $this->redirect('this');
+            }
             $this->task['description'] = $task->description;
+            $this->task['deadline'] = $task->deadline;
             $taskFormControl->hideForm();
             $this->redrawControl();
         };

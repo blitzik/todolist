@@ -99,6 +99,7 @@ class TasksListControl extends Control
                               ->groupBy('t.id')
                               ->setParameters(['id' => $taskID])
                               ->getQuery()->getArrayResult();
+
                 $task = $t[0];
             } else {
                 $task = $this->tasks[$taskID];

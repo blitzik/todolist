@@ -1,6 +1,6 @@
 {block content}
 
-<h2 n:block="title">{$project->name}</h2>
+<h2 n:block="title">{$project->name} <small>[tasks for next 7 days]</small></h2>
 <a href="{link Project:addTask, id => $project->id}">+ Add Task</a>
 
 {control tasksList}

@@ -1,8 +1,9 @@
 {snippet list}
 <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
-{var $isRootTask = true;}
-{var $taskID = null;}
+{var $isRootTask = true;
+     $taskID = null;
+     $parent = null}
 <div class="tree">
 {foreach $tasks as $key => $root}
 {block task}
@@ -10,7 +11,7 @@
 
     {foreach $root as $task}
     {? $taskID = $task['id']}
-        <li>
+        <li data-task-id="{$taskID}" n:attr="data-task-parent-id => $parent">
             {control taskLabel-$taskID}
 
             <div class="task-actions">
@@ -20,8 +21,7 @@
                            class="btn btn-default btn-sm task-undone">Mark as finished</a></li>
 
                     <li n:if="$isAddTaskVisible == true and $task['level'] < 2">
-                        <a href="{plink Project:addTask, id => $task['project_id'],
-                                                         parentTaskID => $taskID}" class="btn btn-default btn-sm">+ Add task</a></li>
+                        <a href="{link taskLabel-$taskID:addSubTask!}" class="ajax btn btn-default btn-sm">+ Add task</a></li>
 
                     <li n:if="$isEditButtonVisible == true">
                         <a class="ajax btn btn-default btn-sm" href="{link taskLabel-$taskID:editLabel!}">Edit</a>
@@ -31,13 +31,13 @@
                     </li>
                 </ul>
             </div>
-            <input type="checkbox" id="task-{$task['id']}"
+            <input type="checkbox" id="task-{$task['id']}-input"
                    n:if="!empty($task['__children'])">
 
 
         {if !empty($task['__children'])}
             {? $isRootTask = false}
-            {include task, root => $task['__children']}
+            {include task, root => $task['__children'], parent => $taskID}
         {/if}
         </li>
     {/foreach}
@@ -48,4 +48,20 @@
 
 {/foreach}
 </div>
+
+<script>
+$(function () {
+    var hash = window.location.hash;
+    if (hash.length > 0) {
+        var task = $('[data-task-id=' + hash.substr(6) + ']');
+        task.find('label').first().css('border-bottom', '2px solid #ffb598');
+
+        var parents = task.parents('li');
+        parents.each(function () {
+            var taskId = $(this).data().taskId;
+            $('#task-' + taskId + '-input').prop('checked', true);
+        });
+    }
+});
+</script>
 {/snippet}

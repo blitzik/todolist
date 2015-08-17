@@ -42,6 +42,14 @@ class TaskLabelControl extends Control
             true
         );
 
+        $comp->onNewTask[] = function (
+            TaskFormControl $taskFormControl,
+            Task $task
+        ) {
+            $this->presenter->flashMessage('New Task has been successfully created.', 'bg-success');
+            $this->redirect('this#task=' . $task->getId());
+        };
+
         $comp->onEditTask[] = function (
             TaskFormControl $taskFormControl,
             Task $task,
@@ -72,6 +80,21 @@ class TaskLabelControl extends Control
             $this['taskForm']->redrawControl();
         } else {
             $this->presenter->redirect('Task:edit', ['id' => $this->task['id']]);
+        }
+    }
+
+    public function handleAddSubTask()
+    {
+        if ($this->presenter->isAjax()) {
+            $this['taskForm']->setFormVisible();
+            $this['taskForm']->setFormAsEditable(false);
+            $this['taskForm']->redrawControl();
+        } else {
+            $this->presenter->redirect(
+                'Project:addTask',
+                ['id' => $this->task['project_id'],
+                 'parentTaskID' => $this->task['id']]
+            );
         }
     }
 

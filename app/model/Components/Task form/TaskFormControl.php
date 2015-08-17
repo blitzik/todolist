@@ -9,11 +9,11 @@ use Nette\Application\UI\Form;
 use TodoList\Entities\Project;
 use Nette\Utils\Validators;
 use TodoList\Entities\Task;
+use Tracy\Debugger;
 
 class TaskFormControl extends Control
 {
-    public $onNewRootTask;
-    public $onNewSubTask;
+    public $onNewTask;
     public $onEditTask;
     public $onCancelClick;
 
@@ -55,6 +55,7 @@ class TaskFormControl extends Control
 
         Validators::assert($isForEdit, 'bool');
         $this->isEditForm = $isForEdit;
+        $this['form']['isEditForm']->value = $isForEdit;
     }
 
     /**
@@ -63,6 +64,19 @@ class TaskFormControl extends Control
     public function setProject(Project $project)
     {
         $this->project = $project;
+    }
+
+    public function setFormAsEditable($isEditable)
+    {
+        Validators::assert($isEditable, 'bool');
+
+        if ($isEditable === false) {
+            $this['form']['description']->value = null;
+            $this['form']['date']->value = null;
+        }
+
+        $this->isEditForm = $isEditable;
+        $this['form']['isEditForm']->value = $isEditable;
     }
 
     public function setFormVisible()
@@ -91,6 +105,10 @@ class TaskFormControl extends Control
              ->setRequired()
              ->setAttribute('class', 'datepicker form-control');
 
+        if (isset($this->isEditForm)) {
+            $form->addHidden('isEditForm'/*, (isset($this->task) ? $this->isEditForm : 'noEditForm')*/);
+        }
+
         $form->addSubmit('save', 'Save')
              ->onClick[] = [$this, 'processSave'];
 
@@ -109,18 +127,19 @@ class TaskFormControl extends Control
     {
         $form = $button->getForm();
         $values = $form->getValues();
+
         $deadlineDate = new \DateTime($values['date']);
+        $currentDate = new \DateTime(date('Y-m-d'));
 
-        if (isset($this->task)) {
-            $currentDate = new \DateTime(date('Y-m-d'));
-
-            if ($this->isEditForm === true) {
+        if (isset($values['isEditForm'])) {
+            if ($values['isEditForm'] == true) {
                 $lowestDeadline = $this->findLowestDeadlineValue($this->task);
                 $highestDeadline = $this->findHighestDeadlineValue($this->task);
 
                 if ($highestDeadline === null) {
                     if ($deadlineDate < $lowestDeadline) {
-                        $form->addError('The lowest possible Deadline can be: ' . $lowestDeadline->format('d.m.Y'));
+                        $form->addError('The lowest possible Deadline to select is: ' . $lowestDeadline->format('d.m.Y'));
+                        $this->redrawControl();
                         return;
                     }
                 } else {
@@ -129,6 +148,7 @@ class TaskFormControl extends Control
                             'The Task deadline has to be between: ' . $lowestDeadline->format('d.m.Y') . ' - ' .
                             $highestDeadline->format('d.m.Y')
                         );
+                        $this->redrawControl();
                         return;
                     }
                 }
@@ -152,6 +172,7 @@ class TaskFormControl extends Control
                         'The Task Deadline can be between: ' . ($currentDate->format('d.m.Y')) . ' - ' .
                         $lastChildDeadline->format('d.m.Y')
                     );
+                    $this->redrawControl();
                     return;
                 }
 
@@ -163,9 +184,15 @@ class TaskFormControl extends Control
                 );
                 $this->em->persist($task)->flush();
 
-                $this->onNewSubTask($this, $task);
+                $this->onNewTask($this, $task);
             }
         } else { // New Root Task creation
+            if ($deadlineDate <= $currentDate) {
+                $form->addError('The lowest possible Deadline to select is: ' . $currentDate->format('d.m.Y'));
+                $this->redrawControl();
+                return;
+            }
+
             if (isset($this->project)) {
                 $task = new Task(
                     $values['description'],
@@ -174,7 +201,7 @@ class TaskFormControl extends Control
                 );
                 $this->em->persist($task)->flush();
 
-                $this->onNewRootTask($this, $task);
+                $this->onNewTask($this, $task);
             }
         }
     }

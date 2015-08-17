@@ -41,6 +41,8 @@ $(function () {
             minDate: new Date(),
             maxDate: new Date({$lastChildDeadline->format('Y-m-d')})
             {/if}
+        {else}
+        minDate: new Date()
         {/if}
     });
 });

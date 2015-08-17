@@ -1,7 +1,7 @@
-<div class="task-description">
 {var $id = $task['id']}
+<div class="task-description" id="task-{$id}">
     <div class="task-info">
-        <span class="due-date{if $task['deadline'] < (new \DateTime())->setTime(0,0,0)} overdue{/if}"
+        <span class="due-date{if $task['deadline'] < (new \DateTime(date('Y-m-d')))} overdue{/if}"
               n:snippet="task-deadline">
             {$task['deadline']|date:'j M Y'}
         </span>
@@ -10,7 +10,8 @@
            class="project-name">{$task['project_name']}</a>
         {/ifCurrent}
     </div>
-    <label for="task-{$id}" n:snippet="task-label">{$task['description']}</label>
+
+    <label for="task-{$id}-input" n:snippet="task-label">{$task['description']}</label>
 
 {snippet labelForm}
     {control taskForm}

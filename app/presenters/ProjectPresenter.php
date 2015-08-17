@@ -291,22 +291,15 @@ class ProjectPresenter extends SecurityPresenter
         $comp->hideCancelButton();
         $comp->setFormVisible();
 
-        $comp->onNewRootTask[] = [$this, 'onNewRootTask'];
-        $comp->onNewSubTask[] = [$this, 'onNewSubTask'];
+        $comp->onNewTask[] = [$this, 'onNewTask'];
 
         return $comp;
     }
 
-    public function onNewRootTask(TaskFormControl $formControl, Task $task)
+    public function onNewTask(TaskFormControl $formControl, Task $task)
     {
-        $this->flashMessage('New Root Task has been successfully created.', 'bg-success');
-        $this->redirect('Project:tasks', ['id' => $task->project->getId()]);
-    }
-
-    public function onNewSubTask(TaskFormControl $formControl, Task $task)
-    {
-        $this->flashMessage('New Root Task has been successfully created.', 'bg-success');
-        $this->redirect('Project:tasks', ['id' => $task->project->getId()]);
+        $this->flashMessage('New Task has been successfully created.', 'bg-success');
+        $this->redirect('Project:tasks#task=' . $task->getId(), ['id' => $task->project->getId()]);
     }
 
 }

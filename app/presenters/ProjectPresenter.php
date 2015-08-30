@@ -89,12 +89,12 @@ class ProjectPresenter extends SecurityPresenter
 
         $this->tasksQb = $this->em->createQueryBuilder()
             ->select('t.id, t.lft, t.rgt, t.level, t.root,
-                      t.description, t.deadline, t.priority,
+                      t.description, t.deadline, t.last_child_deadline, t.priority,
                       t.done, p.name as project_name, p.id as project_id')
             ->from(Task::class, 't')
             ->join(Project::class, 'p WITH p = t.project')
             ->where('t.done = 0')
-            ->andWhere('t.deadline >= CURRENT_DATE()')
+            ->andWhere('t.deadline >= CURRENT_DATE() AND t.deadline <=DATE_ADD(CURRENT_DATE(), 7, \'DAY\')')
             ->andWhere('t.project = :project')
             ->orderBy('t.root DESC, t.lft')
             ->setParameter('project', $this->project);

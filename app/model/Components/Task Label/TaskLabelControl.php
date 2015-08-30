@@ -56,7 +56,7 @@ class TaskLabelControl extends Control
             $wasOverdue
         ) {
             // was Task overdue before change?
-            if ($wasOverdue and $task->deadline >= (new \DateTime('now'))) {
+            if ($wasOverdue === true) {
                 $this->redirect('this');
             }
             $this->task['description'] = $task->description;

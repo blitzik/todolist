@@ -479,11 +479,11 @@ $.nette.ext('init', {
 	buttonSelector: 'input.ajax[type="submit"], button.ajax[type="submit"], input.ajax[type="image"]'
 });
 
-$.nette.ext('elastic', {
+/*$.nette.ext('elastic', {
     complete: function () {
         $('textarea').elastic();
     }
-});
+});*/
 
 $.nette.ext('spinner', {
     init: function () {
@@ -507,10 +507,10 @@ $.nette.ext('spinner', {
         return $('<div>', {
             id: 'ajax-spinner',
             css: {
-                display: 'none',
-                position: 'fixed',
+                display: 'none'
+                /*position: 'fixed',
                 left: '50%',
-                right: '50%'
+                right: '50%'*/
             }
         });
     },

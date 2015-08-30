@@ -6,14 +6,17 @@
 }
 
 #ajax-spinner{
-  margin: 15px 0 0 15px;
+  width: 50px;
+  display: block;
+  position: fixed;
+  top: 50%;
+  left: 50%;
   padding: 13px;
   background: white url('../images/spinner.gif') no-repeat 50% 50%;
   font-size: 0;
   z-index: 123456;
 }
 
-/*#404040*/
 
 body{
   background-color: #6DBDD6;
@@ -190,11 +193,22 @@ h2{
 
 }
 
+.empty-task-list{
+  margin-top: 50px;
+}
+
 .tree {
   margin: 20px 0 70px 0;
 
+  .separator{
+    border-bottom: 2px solid #CCC;
+    margin-top: 45px;
+  }
+
   .task {
-    margin-top: 50px;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
   }
 
   @task-undone-color: #a0dfbf;

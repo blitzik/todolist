@@ -21,7 +21,10 @@
 </div>
 
 <script>
+(function ($) {
 $(function () {
+    $('textarea').elastic();
+
     var datepicker = $('input.datepicker');
     datepicker.prop('readonly', true);
 
@@ -46,6 +49,7 @@ $(function () {
         {/if}
     });
 });
+})($);
 </script>
 {/if}
 {/snippet}

@@ -3,6 +3,7 @@
 namespace TodoList\Components;
 
 use Nextras\Application\UI\SecuredLinksControlTrait;
+use TodoList\Facades\TasksFacade;
 use TodoList\Repositories\TaskRepository;
 use Nette\Application\UI\Multiplier;
 use Kdyby\Doctrine\EntityManager;
@@ -33,6 +34,11 @@ class TasksListControl extends Control
     private $tasksRepository;
 
     /**
+     * @var TasksFacade
+     */
+    private $tasksFacade;
+
+    /**
      * @var User
      */
     private $user;
@@ -54,28 +60,24 @@ class TasksListControl extends Control
 
     // ------
 
-    private $isAddTaskVisible = true;
     private $isEditButtonVisible = true;
     private $isRemoveButtonVisible = true;
 
     public function __construct(
         QueryBuilder $qb,
         User $user,
+        TasksFacade $tasksFacade,
         EntityManager $entityManager,
         ITaskFormControlFactory $taskFormFactory,
         ITaskLabelControlFactory $taskLabelControlFactory
     ) {
         $this->qb = $qb;
-        $this->em = $entityManager;
         $this->user = $user;
+        $this->em = $entityManager;
+        $this->tasksFacade = $tasksFacade;
         $this->tasksRepository = $entityManager->getRepository(Task::class);
         $this->taskFormFactory = $taskFormFactory;
         $this->taskLabelControlFactory = $taskLabelControlFactory;
-    }
-
-    public function hideAddTaskButton()
-    {
-        $this->isAddTaskVisible = false;
     }
 
     public function hideEditButton()
@@ -106,6 +108,8 @@ class TasksListControl extends Control
             }
 
             $comp = $this->taskLabelControlFactory->create($task);
+
+            $comp['taskForm']->hideForm();
             $comp['taskForm']['form']['description']->setDefaultValue($task['description']);
             $comp['taskForm']['form']['date']->setDefaultValue(
                 $task['deadline']->format('d.m.Y')
@@ -130,11 +134,12 @@ class TasksListControl extends Control
      */
     public function handleRemoveTask($taskID)
     {
-        $this->em->remove($this->em->getReference(Task::class, $taskID));
-        $this->em->flush();
+        $task = $this->em->getReference(Task::class, $taskID);
+
+        $this->tasksFacade->removeTask($task);
 
         $this->flashMessage('Task has been removed.', 'bg-success');
-        $this->redirect('this');
+        $this->redirect('this#task=' . $task->parent->getId());
     }
 
     public function render()
@@ -154,7 +159,6 @@ class TasksListControl extends Control
         }
 
         $template->tasks = $tasks;
-        $template->isAddTaskVisible = $this->isAddTaskVisible;
         $template->isEditButtonVisible = $this->isEditButtonVisible;
         $template->isRemoveButtonVisible = $this->isRemoveButtonVisible;
 

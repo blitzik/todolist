@@ -47,6 +47,7 @@ class TaskPresenter extends SecurityPresenter
     public function actionEdit($id)
     {
         $this->task = $this->getTaskByID($id);
+
         $this['taskForm']->setTask($this->task, true);
 
         $this['taskForm']['form']['description']->setDefaultValue($this->task->description);

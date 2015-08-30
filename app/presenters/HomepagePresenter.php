@@ -53,7 +53,6 @@ class HomepagePresenter extends SecurityPresenter
     protected function createComponentOverdueTasks()
     {
         $comp = $this->tasksListFactory->create($this->overdueTasksQb);
-        $comp->hideAddTaskButton();
 
         return $comp;
     }

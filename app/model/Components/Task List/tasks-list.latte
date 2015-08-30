@@ -1,11 +1,15 @@
 {snippet list}
 <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
+{if !empty($tasks)}
 {var $isRootTask = true;
+     $isMostTopTask = true;
      $taskID = null;
-     $parent = null}
+     $parent = null;
+     $currDate = (new \DateTime())->setTime(0,0,0)}
 <div class="tree">
 {foreach $tasks as $key => $root}
+<div n:if="!$iterator->isFirst()" class="separator"></div>
 {block task}
 <ul n:class="$isRootTask ? task">
 
@@ -18,23 +22,28 @@
                 <ul>
                     <li>
                         <a href="{link markAsDone!, taskID => $taskID}"
-                           class="btn btn-default btn-sm task-undone">Mark as finished</a></li>
+                           class="btn btn-default btn-sm task-undone">Mark as finished</a>
+                    </li>
 
-                    <li n:if="$isAddTaskVisible == true and $task['level'] < 2">
-                        <a href="{link taskLabel-$taskID:addSubTask!}" class="ajax btn btn-default btn-sm">+ Add task</a></li>
+                    <li n:if="($task['deadline'] >= $currDate and $task['level'] < 2) and ($task['last_child_deadline'] >= $currDate)">
+                        <a href="{link taskLabel-$taskID:addSubTask!}" class="ajax btn btn-default btn-sm">+ Add task</a>
+                    </li>
 
-                    <li n:if="$isEditButtonVisible == true">
+                    <li n:if="($task['deadline'] < $currDate and $isMostTopTask === true) or $task['deadline'] >= $currDate">
                         <a class="ajax btn btn-default btn-sm" href="{link taskLabel-$taskID:editLabel!}">Edit</a>
                     </li>
+                    <li>
+                        <a href="" class="btn btn-default btn-sm">Check entire Task</a>
+                    </li>
                     <li n:if="$isRemoveButtonVisible == true">
-                        <a href="{link removeTask!, taskID => $taskID}" class="btn btn-default btn-sm">Remove</a>
+                        <a href="{link removeTask!, taskID => $taskID}" class="btn btn-default btn-sm btn-danger">Remove</a>
                     </li>
                 </ul>
             </div>
             <input type="checkbox" id="task-{$task['id']}-input"
                    n:if="!empty($task['__children'])">
 
-
+        {? $isMostTopTask = false;}
         {if !empty($task['__children'])}
             {? $isRootTask = false}
             {include task, root => $task['__children'], parent => $taskID}
@@ -44,7 +53,7 @@
 
 </ul>
 {/block}
-{? $isRootTask = true}
+{? $isRootTask = true; $isMostTopTask = true}
 
 {/foreach}
 </div>
@@ -64,4 +73,9 @@ $(function () {
     }
 });
 </script>
+{else}
+<p class="empty-task-list">This project does not contain any Tasks.
+Would you like to <a href="{plink Project:addTask, id => $presenter->getParameter('id')}">add some</a>?</p>
+{/if}
+
 {/snippet}

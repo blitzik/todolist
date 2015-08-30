@@ -86,7 +86,13 @@ class Task extends BaseEntity
      * @var \DateTime|null
      */
     protected $deadline;
-    
+
+    /**
+     * @ORM\Column(name="last_child_deadline", type="date", nullable=true, unique=false)
+     * @var \DateTime|null
+     */
+    private $last_child_deadline;
+
     /**
      * @ORM\Column(name="priority", type="smallint", nullable=true, unique=false)
      * @var int
@@ -153,6 +159,14 @@ class Task extends BaseEntity
     }
 
     /**
+     * @param \DateTime $lastChildDeadline
+     */
+    public function setLastChildDeadline(\DateTime $lastChildDeadline)
+    {
+        $this->last_child_deadline = $lastChildDeadline;
+    }
+
+    /**
      * @return int
      */
     public function getRoot()
@@ -192,7 +206,13 @@ class Task extends BaseEntity
         return $this->id;
     }
 
+    /**
+     * @return bool
+     */
+    public function isOverdue()
+    {
+        $currentDate = \DateTime::createFromFormat('!Y-m-d', (new \DateTime)->format('Y-m-d'));
 
-
-    
+        return ($this->deadline < $currentDate);
+    }
 }
